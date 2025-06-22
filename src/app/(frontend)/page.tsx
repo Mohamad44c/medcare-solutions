@@ -1,14 +1,8 @@
-import { headers as getHeaders } from 'next/headers.js'
-import { getPayload } from 'payload'
-
-import config from '@/payload.config'
+import { redirect } from 'next/navigation'
 import './globals.css'
 
-export default async function HomePage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  return <div>front end</div>
+export default function HomePage() {
+  // For the root route, we'll always redirect to login
+  // The middleware will handle redirecting authenticated users to dashboard
+  redirect('/login')
 }

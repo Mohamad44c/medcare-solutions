@@ -1,9 +1,10 @@
 import React from 'react'
 import './globals.css'
+import Providers from './providers'
 
 export const metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'Payload Blank Template',
+  description: 'MCS',
+  title: 'MCS Operations',
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
@@ -12,7 +13,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <main>{children}</main>
+        <Providers>
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   )

@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    scopes: Scope;
     brands: Brand;
     manufacturer: Manufacturer;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,6 +80,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    scopes: ScopesSelect<false> | ScopesSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     manufacturer: ManufacturerSelect<false> | ManufacturerSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -156,6 +158,23 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "scopes".
+ */
+export interface Scope {
+  id: number;
+  model: string;
+  serialNumber: string;
+  brand: number | Brand;
+  manufacturer: number | Manufacturer;
+  status: 'pending' | 'evaluated' | 'approved' | 'denied' | 'completed';
+  description?: string | null;
+  receivedDate?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brands".
  */
 export interface Brand {
@@ -193,6 +212,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'scopes';
+        value: number | Scope;
       } | null)
     | ({
         relationTo: 'brands';
@@ -277,6 +300,22 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "scopes_select".
+ */
+export interface ScopesSelect<T extends boolean = true> {
+  model?: T;
+  serialNumber?: T;
+  brand?: T;
+  manufacturer?: T;
+  status?: T;
+  description?: T;
+  receivedDate?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -11,6 +11,11 @@ export type LoginFields = {
   password: string
 }
 
+interface PayloadError extends Error {
+  message: string
+  data?: unknown
+}
+
 export async function loginAction(data: LoginFields) {
   try {
     const payload = await getPayload({ config })
@@ -33,10 +38,11 @@ export async function loginAction(data: LoginFields) {
     })
 
     redirect('/dashboard/scopes')
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as PayloadError
     return {
       success: false,
-      error: error.message || 'An error occurred during login',
+      error: err.message || 'An error occurred during login',
     }
   }
 }
@@ -48,10 +54,11 @@ export async function logoutAction() {
     const cookieStore = await cookies()
     cookieStore.delete('payload-token')
     redirect('/login')
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as PayloadError
     return {
       success: false,
-      error: error.message || 'An error occurred during logout',
+      error: err.message || 'An error occurred during logout',
     }
   }
 }

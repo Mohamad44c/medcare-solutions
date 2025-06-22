@@ -10,8 +10,20 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { logoutAction } from '@/app/actions/auth'
+import { useMutation } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 
 export default function SidebarHeader() {
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const result = await logoutAction()
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+      return result
+    },
+  })
+
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 w-full">
       <div className="flex items-center gap-2">
@@ -25,8 +37,19 @@ export default function SidebarHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <Button variant="outline" onClick={() => logoutAction()}>
-        Logout
+      <Button
+        variant="outline"
+        onClick={() => logoutMutation.mutate()}
+        disabled={logoutMutation.isPending}
+      >
+        {logoutMutation.isPending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Logging out...
+          </>
+        ) : (
+          'Logout'
+        )}
       </Button>
     </header>
   )

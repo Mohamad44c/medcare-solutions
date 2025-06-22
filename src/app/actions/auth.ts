@@ -32,7 +32,7 @@ export async function loginAction(data: LoginFields) {
       path: '/',
     })
 
-    return { success: true }
+    redirect('/dashboard/scopes')
   } catch (error: any) {
     return {
       success: false,

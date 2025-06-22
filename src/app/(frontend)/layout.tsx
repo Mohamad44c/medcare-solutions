@@ -14,7 +14,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en">
       <body>
         <Providers>
-          <main>{children}</main>
+          <main className="w-full">{children}</main>
         </Providers>
       </body>
     </html>

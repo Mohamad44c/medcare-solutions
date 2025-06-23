@@ -22,8 +22,8 @@ const countries = [
   { label: 'United States', value: 'US' },
 ]
 
-export const Manufacturer: CollectionConfig = {
-  slug: 'manufacturer',
+export const Manufacturers: CollectionConfig = {
+  slug: 'manufacturers',
   admin: {
     useAsTitle: 'companyName',
   },

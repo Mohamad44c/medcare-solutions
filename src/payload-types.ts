@@ -67,22 +67,22 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
-    media: Media;
     scopes: Scope;
     brands: Brand;
-    manufacturer: Manufacturer;
+    manufacturers: Manufacturer;
+    users: User;
+    media: Media;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
     scopes: ScopesSelect<false> | ScopesSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
-    manufacturer: ManufacturerSelect<false> | ManufacturerSelect<true>;
+    manufacturers: ManufacturersSelect<false> | ManufacturersSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -122,43 +122,6 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  password?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -208,7 +171,7 @@ export interface Brand {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "manufacturer".
+ * via the `definition` "manufacturers".
  */
 export interface Manufacturer {
   id: number;
@@ -240,19 +203,48 @@ export interface Manufacturer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  alt: string;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
   id: number;
   document?:
-    | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
     | ({
         relationTo: 'scopes';
         value: number | Scope;
@@ -262,8 +254,16 @@ export interface PayloadLockedDocument {
         value: number | Brand;
       } | null)
     | ({
-        relationTo: 'manufacturer';
+        relationTo: 'manufacturers';
         value: number | Manufacturer;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -309,6 +309,49 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "scopes_select".
+ */
+export interface ScopesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  Company?: T;
+  type?: T;
+  modelNumber?: T;
+  serialNumber?: T;
+  brand?: T;
+  manufacturer?: T;
+  status?: T;
+  description?: T;
+  receivedDate?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "manufacturers_select".
+ */
+export interface ManufacturersSelect<T extends boolean = true> {
+  companyName?: T;
+  companyEmail?: T;
+  companyPhone?: T;
+  country?: T;
+  companyWebsite?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -340,49 +383,6 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "scopes_select".
- */
-export interface ScopesSelect<T extends boolean = true> {
-  code?: T;
-  name?: T;
-  Company?: T;
-  type?: T;
-  modelNumber?: T;
-  serialNumber?: T;
-  brand?: T;
-  manufacturer?: T;
-  status?: T;
-  description?: T;
-  receivedDate?: T;
-  createdBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brands_select".
- */
-export interface BrandsSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "manufacturer_select".
- */
-export interface ManufacturerSelect<T extends boolean = true> {
-  companyName?: T;
-  companyEmail?: T;
-  companyPhone?: T;
-  country?: T;
-  companyWebsite?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

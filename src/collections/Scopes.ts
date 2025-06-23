@@ -83,7 +83,7 @@ export const Scopes: CollectionConfig = {
         {
           name: 'manufacturer',
           type: 'relationship',
-          relationTo: 'manufacturer',
+          relationTo: 'manufacturers',
           required: true,
         },
       ],

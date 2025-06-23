@@ -162,15 +162,30 @@ export interface Media {
  */
 export interface Scope {
   id: number;
+  code?: string | null;
   name: string;
   Company?: string | null;
   type: 'rigid' | 'flexible';
-  model: string;
+  modelNumber: string;
   serialNumber: string;
   brand: number | Brand;
   manufacturer: number | Manufacturer;
   status: 'pending' | 'evaluated' | 'approved' | 'denied' | 'completed';
-  description?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   receivedDate?: string | null;
   createdBy?: (number | null) | User;
   updatedAt: string;
@@ -182,7 +197,7 @@ export interface Scope {
  */
 export interface Brand {
   id: number;
-  title?: string | null;
+  title: string;
   description?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -196,7 +211,25 @@ export interface Manufacturer {
   companyName?: string | null;
   companyEmail?: string | null;
   companyPhone?: string | null;
-  country?: string | null;
+  country:
+    | 'CA'
+    | 'CN'
+    | 'EG'
+    | 'FR'
+    | 'DE'
+    | 'IT'
+    | 'JP'
+    | 'LB'
+    | 'RU'
+    | 'SA'
+    | 'SG'
+    | 'ZA'
+    | 'ES'
+    | 'SE'
+    | 'CH'
+    | 'AE'
+    | 'GB'
+    | 'US';
   companyWebsite?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -309,10 +342,11 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "scopes_select".
  */
 export interface ScopesSelect<T extends boolean = true> {
+  code?: T;
   name?: T;
   Company?: T;
   type?: T;
-  model?: T;
+  modelNumber?: T;
   serialNumber?: T;
   brand?: T;
   manufacturer?: T;

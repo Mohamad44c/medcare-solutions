@@ -187,4 +187,7 @@ export const Scopes: CollectionConfig = {
       },
     ],
   },
+  lockDocuments: {
+    duration: 600, // Duration in seconds
+  },
 }

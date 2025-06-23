@@ -148,7 +148,7 @@ export const Scopes: CollectionConfig = {
         }
 
         if (operation === 'create') {
-          const prefix = data.type === 'rigid' ? 'rg' : 'fl'
+          const prefix = data.type === 'rigid' ? 'RG' : 'FL'
 
           const result = await req.payload.find({
             collection: 'scopes',
@@ -169,7 +169,7 @@ export const Scopes: CollectionConfig = {
           if (filteredDocs.length > 0) {
             const numbers = filteredDocs
               .map((doc: ScopeDocument) => {
-                const match = doc.code.match(/^(?:rg|fl)-(\d+)$/)
+                const match = doc.code.match(/^(?:RG|FL)-(\d+)$/)
                 return match ? parseInt(match[1]) : 0
               })
               .filter((num: number) => !isNaN(num) && num > 0)

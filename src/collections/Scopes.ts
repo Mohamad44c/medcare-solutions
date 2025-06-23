@@ -7,6 +7,24 @@ export const Scopes: CollectionConfig = {
   },
   fields: [
     {
+      name: 'name',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'Company',
+      type: 'text',
+    },
+    {
+      name: 'type',
+      type: 'select',
+      options: [
+        { label: 'Rigid', value: 'rigid' },
+        { label: 'Flexible', value: 'flexible' },
+      ],
+      required: true,
+    },
+    {
       name: 'model',
       type: 'text',
       required: true,

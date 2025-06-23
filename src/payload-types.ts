@@ -162,6 +162,9 @@ export interface Media {
  */
 export interface Scope {
   id: number;
+  name: string;
+  Company?: string | null;
+  type: 'rigid' | 'flexible';
   model: string;
   serialNumber: string;
   brand: number | Brand;
@@ -306,6 +309,9 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "scopes_select".
  */
 export interface ScopesSelect<T extends boolean = true> {
+  name?: T;
+  Company?: T;
+  type?: T;
   model?: T;
   serialNumber?: T;
   brand?: T;

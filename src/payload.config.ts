@@ -12,6 +12,7 @@ import { Media } from './collections/Media'
 import { Brands } from './collections/Brands'
 import { Manufacturer } from './collections/Manufacturer'
 import { Scopes } from './collections/Scopes'
+import { Settings } from './globals/Settings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -24,6 +25,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Scopes, Brands, Manufacturer],
+  globals: [Settings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

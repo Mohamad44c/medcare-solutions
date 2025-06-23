@@ -68,8 +68,10 @@ export interface Config {
   blocks: {};
   collections: {
     scopes: Scope;
+    inventory: Inventory;
     brands: Brand;
     manufacturers: Manufacturer;
+    companies: Company;
     users: User;
     media: Media;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,8 +81,10 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     scopes: ScopesSelect<false> | ScopesSelect<true>;
+    inventory: InventorySelect<false> | InventorySelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     manufacturers: ManufacturersSelect<false> | ManufacturersSelect<true>;
+    companies: CompaniesSelect<false> | CompaniesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -220,6 +224,37 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory".
+ */
+export interface Inventory {
+  id: number;
+  name: string;
+  'scope type': 'rigid' | 'flexible';
+  length?: number | null;
+  diameter?: number | null;
+  cost?: number | null;
+  price?: number | null;
+  manufacturer?: (number | null) | Manufacturer;
+  quantity?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies".
+ */
+export interface Company {
+  id: number;
+  name: string;
+  'phone number'?: number | null;
+  email?: string | null;
+  address?: string | null;
+  'mof number'?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
@@ -250,12 +285,20 @@ export interface PayloadLockedDocument {
         value: number | Scope;
       } | null)
     | ({
+        relationTo: 'inventory';
+        value: number | Inventory;
+      } | null)
+    | ({
         relationTo: 'brands';
         value: number | Brand;
       } | null)
     | ({
         relationTo: 'manufacturers';
         value: number | Manufacturer;
+      } | null)
+    | ({
+        relationTo: 'companies';
+        value: number | Company;
       } | null)
     | ({
         relationTo: 'users';
@@ -329,6 +372,22 @@ export interface ScopesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory_select".
+ */
+export interface InventorySelect<T extends boolean = true> {
+  name?: T;
+  'scope type'?: T;
+  length?: T;
+  diameter?: T;
+  cost?: T;
+  price?: T;
+  manufacturer?: T;
+  quantity?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brands_select".
  */
 export interface BrandsSelect<T extends boolean = true> {
@@ -347,6 +406,19 @@ export interface ManufacturersSelect<T extends boolean = true> {
   companyPhone?: T;
   country?: T;
   companyWebsite?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies_select".
+ */
+export interface CompaniesSelect<T extends boolean = true> {
+  name?: T;
+  'phone number'?: T;
+  email?: T;
+  address?: T;
+  'mof number'?: T;
   updatedAt?: T;
   createdAt?: T;
 }

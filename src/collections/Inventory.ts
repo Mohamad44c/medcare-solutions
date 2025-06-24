@@ -19,6 +19,12 @@ export const Inventory: CollectionConfig = {
       required: true,
     },
     {
+      name: 'part',
+      type: 'relationship',
+      relationTo: 'part',
+      hasMany: true,
+    },
+    {
       name: 'scope type',
       type: 'select',
       options: [
@@ -26,14 +32,6 @@ export const Inventory: CollectionConfig = {
         { label: 'Flexible', value: 'flexible' },
       ],
       required: true,
-    },
-    {
-      name: 'length',
-      type: 'number',
-    },
-    {
-      name: 'diameter',
-      type: 'number',
     },
     {
       name: 'cost',

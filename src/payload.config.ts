@@ -15,6 +15,7 @@ import { Settings } from './globals/Settings'
 import { Manufacturers } from './collections/Manufacturers'
 import { Companies } from './collections/Companies'
 import { Inventory } from './collections/Inventory'
+import { Part } from './collections/Part'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,7 +27,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Scopes, Inventory, Brands, Manufacturers, Companies, Users, Media],
+  collections: [Scopes, Inventory, Part, Brands, Manufacturers, Companies, Users, Media],
   globals: [Settings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

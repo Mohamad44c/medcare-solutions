@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     scopes: Scope;
     inventory: Inventory;
+    part: Part;
     brands: Brand;
     manufacturers: Manufacturer;
     companies: Company;
@@ -82,6 +83,7 @@ export interface Config {
   collectionsSelect: {
     scopes: ScopesSelect<false> | ScopesSelect<true>;
     inventory: InventorySelect<false> | InventorySelect<true>;
+    part: PartSelect<false> | PartSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     manufacturers: ManufacturersSelect<false> | ManufacturersSelect<true>;
     companies: CompaniesSelect<false> | CompaniesSelect<true>;
@@ -229,13 +231,29 @@ export interface User {
 export interface Inventory {
   id: number;
   name: string;
+  part?: (number | Part)[] | null;
   'scope type': 'rigid' | 'flexible';
+  cost?: number | null;
+  price?: number | null;
+  manufacturer?: (number | null) | Manufacturer;
+  quantity?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "part".
+ */
+export interface Part {
+  id: number;
+  part_name: string;
+  part_number: string;
   length?: number | null;
   diameter?: number | null;
   cost?: number | null;
   price?: number | null;
   manufacturer?: (number | null) | Manufacturer;
-  quantity?: number | null;
+  country?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -287,6 +305,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'inventory';
         value: number | Inventory;
+      } | null)
+    | ({
+        relationTo: 'part';
+        value: number | Part;
       } | null)
     | ({
         relationTo: 'brands';
@@ -376,13 +398,28 @@ export interface ScopesSelect<T extends boolean = true> {
  */
 export interface InventorySelect<T extends boolean = true> {
   name?: T;
+  part?: T;
   'scope type'?: T;
+  cost?: T;
+  price?: T;
+  manufacturer?: T;
+  quantity?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "part_select".
+ */
+export interface PartSelect<T extends boolean = true> {
+  part_name?: T;
+  part_number?: T;
   length?: T;
   diameter?: T;
   cost?: T;
   price?: T;
   manufacturer?: T;
-  quantity?: T;
+  country?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -9,9 +9,7 @@ export const Inventory: CollectionConfig = {
     singular: 'Inventory',
     plural: 'Inventory',
   },
-  lockDocuments: {
-    duration: 600,
-  },
+
   fields: [
     {
       name: 'name',

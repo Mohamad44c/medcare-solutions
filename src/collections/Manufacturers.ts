@@ -52,7 +52,4 @@ export const Manufacturers: CollectionConfig = {
       type: 'text',
     },
   ],
-  lockDocuments: {
-    duration: 600, // Duration in seconds
-  },
 }

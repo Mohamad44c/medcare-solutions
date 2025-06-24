@@ -5,9 +5,6 @@ export const Companies: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
   },
-  lockDocuments: {
-    duration: 600,
-  },
   fields: [
     {
       name: 'name',

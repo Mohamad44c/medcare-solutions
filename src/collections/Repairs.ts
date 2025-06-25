@@ -6,6 +6,9 @@ export const Repairs: CollectionConfig = {
     useAsTitle: 'repair_number',
     defaultColumns: ['repair_number', 'scope', 'status', 'total_cost', 'createdAt'],
   },
+  lockDocuments: {
+    duration: 600, // 10 minutes
+  },
   fields: [
     {
       name: 'repair_number',
@@ -120,6 +123,24 @@ export const Repairs: CollectionConfig = {
       },
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read repairs
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // Only admins can create repairs
+      return user?.role === 'admin'
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update repairs
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete repairs
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ req, operation, data }: { req: any; operation: string; data: any }) => {

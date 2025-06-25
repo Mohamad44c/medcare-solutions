@@ -221,6 +221,15 @@ export interface Manufacturer {
  */
 export interface User {
   id: number;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user';
+  /**
+   * Whether this user can log in
+   */
+  isActive?: boolean | null;
+  phone?: string | null;
+  department?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -233,6 +242,8 @@ export interface User {
   password?: string | null;
 }
 /**
+ * Manage inventory items and track stock levels
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "inventory".
  */
@@ -400,10 +411,10 @@ export interface Invoice {
 export interface Company {
   id: number;
   name: string;
-  'phone number'?: number | null;
+  phoneNumber?: number | null;
   email?: string | null;
   address?: string | null;
-  'mof number'?: string | null;
+  mofNumber?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -704,10 +715,10 @@ export interface ManufacturersSelect<T extends boolean = true> {
  */
 export interface CompaniesSelect<T extends boolean = true> {
   name?: T;
-  'phone number'?: T;
+  phoneNumber?: T;
   email?: T;
   address?: T;
-  'mof number'?: T;
+  mofNumber?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -716,6 +727,12 @@ export interface CompaniesSelect<T extends boolean = true> {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  role?: T;
+  isActive?: T;
+  phone?: T;
+  department?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

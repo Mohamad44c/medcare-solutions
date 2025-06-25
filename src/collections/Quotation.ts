@@ -6,6 +6,9 @@ export const Quotation: CollectionConfig = {
     useAsTitle: 'quotation_number',
     defaultColumns: ['quotation_number', 'scope', 'quotation_status', 'price', 'createdAt'],
   },
+  lockDocuments: {
+    duration: 600, // 10 minutes
+  },
   fields: [
     {
       name: 'quotation_number',
@@ -131,6 +134,24 @@ export const Quotation: CollectionConfig = {
       },
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read quotations
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // All authenticated users can create quotations
+      return user?.id ? true : false
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update quotations after creation
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete quotations
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ req, operation, data }: { req: any; operation: string; data: any }) => {

@@ -6,6 +6,9 @@ export const Evaluation: CollectionConfig = {
     useAsTitle: 'evaluation_number',
     defaultColumns: ['evaluation_number', 'scope', 'status', 'createdAt'],
   },
+  lockDocuments: {
+    duration: 600, // 10 minutes
+  },
   fields: [
     {
       name: 'evaluation_number',
@@ -77,6 +80,24 @@ export const Evaluation: CollectionConfig = {
       type: 'textarea',
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read evaluations
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // All authenticated users can create evaluations
+      return user?.id ? true : false
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update evaluations after creation
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete evaluations
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ req, operation, data }: { req: any; operation: string; data: any }) => {

@@ -6,6 +6,9 @@ export const Invoices: CollectionConfig = {
     useAsTitle: 'invoice_number',
     defaultColumns: ['invoice_number', 'scope', 'status', 'total_amount', 'createdAt'],
   },
+  lockDocuments: {
+    duration: 600, // 10 minutes
+  },
   fields: [
     {
       name: 'invoice_number',
@@ -113,6 +116,24 @@ export const Invoices: CollectionConfig = {
       },
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read invoices
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // Only admins can create invoices
+      return user?.role === 'admin'
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update invoices
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete invoices
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ req, operation, data }: { req: any; operation: string; data: any }) => {

@@ -5,6 +5,8 @@ export const Inventory: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'part', 'quantity', 'reorder_point', 'status'],
+    group: 'Inventory Management',
+    description: 'Manage inventory items and track stock levels',
   },
   labels: {
     singular: 'Inventory Item',
@@ -95,6 +97,11 @@ export const Inventory: CollectionConfig = {
       defaultValue: 'in_stock',
       admin: {
         readOnly: true,
+        style: {
+          backgroundColor: 'var(--theme-elevation-50)',
+          padding: '4px 8px',
+          borderRadius: '4px',
+        },
       },
     },
     {
@@ -109,6 +116,24 @@ export const Inventory: CollectionConfig = {
       type: 'textarea',
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read inventory
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // Only admins can create inventory items
+      return user?.role === 'admin'
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update inventory
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete inventory
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ operation, data }: { operation: string; data: any }) => {

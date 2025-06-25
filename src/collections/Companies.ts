@@ -12,7 +12,7 @@ export const Companies: CollectionConfig = {
       required: true,
     },
     {
-      name: 'phone number',
+      name: 'phoneNumber',
       type: 'number',
     },
     {
@@ -24,7 +24,7 @@ export const Companies: CollectionConfig = {
       type: 'text',
     },
     {
-      name: 'mof number',
+      name: 'mofNumber',
       type: 'text',
     },
   ],

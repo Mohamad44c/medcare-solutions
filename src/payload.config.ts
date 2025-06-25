@@ -16,6 +16,10 @@ import { Manufacturers } from './collections/Manufacturers'
 import { Companies } from './collections/Companies'
 import { Inventory } from './collections/Inventory'
 import { Part } from './collections/Part'
+import { Repairs } from './collections/Repairs'
+import { Evaluation } from './collections/Evaluation'
+import { Quotation } from './collections/Quotation'
+import { Invoices } from './collections/Invoices'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -27,7 +31,20 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Scopes, Inventory, Part, Brands, Manufacturers, Companies, Users, Media],
+  collections: [
+    Scopes,
+    Inventory,
+    Part,
+    Repairs,
+    Evaluation,
+    Quotation,
+    Invoices,
+    Brands,
+    Manufacturers,
+    Companies,
+    Users,
+    Media,
+  ],
   globals: [Settings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

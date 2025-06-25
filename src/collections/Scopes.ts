@@ -137,6 +137,24 @@ export const Scopes: CollectionConfig = {
       ],
     },
   ],
+  access: {
+    read: ({ req: { user } }) => {
+      // All authenticated users can read scopes
+      return user?.id ? true : false
+    },
+    create: ({ req: { user } }) => {
+      // All authenticated users can create scopes
+      return user?.id ? true : false
+    },
+    update: ({ req: { user } }) => {
+      // Only admins can update scopes after creation
+      return user?.role === 'admin'
+    },
+    delete: ({ req: { user } }) => {
+      // Only admins can delete scopes
+      return user?.role === 'admin'
+    },
+  },
   hooks: {
     beforeChange: [
       async ({ req, operation, data }: { req: any; operation: string; data: Partial<Scope> }) => {

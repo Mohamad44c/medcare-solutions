@@ -4,10 +4,11 @@ export const Inventory: CollectionConfig = {
   slug: 'inventory',
   admin: {
     useAsTitle: 'name',
+    defaultColumns: ['name', 'part', 'quantity', 'reorder_point', 'status'],
   },
   labels: {
-    singular: 'Inventory',
-    plural: 'Inventory',
+    singular: 'Inventory Item',
+    plural: 'Inventory Items',
   },
   lockDocuments: {
     duration: 600,
@@ -25,7 +26,7 @@ export const Inventory: CollectionConfig = {
       hasMany: true,
     },
     {
-      name: 'scope type',
+      name: 'scope_type',
       type: 'select',
       options: [
         { label: 'Rigid', value: 'rigid' },
@@ -34,12 +35,41 @@ export const Inventory: CollectionConfig = {
       required: true,
     },
     {
-      name: 'cost',
+      name: 'quantity',
       type: 'number',
+      defaultValue: 0,
+      admin: {
+        description: 'Current stock quantity',
+      },
     },
     {
-      name: 'price',
+      name: 'reorder_point',
       type: 'number',
+      defaultValue: 5,
+      admin: {
+        description: 'Minimum quantity before reorder alert',
+      },
+    },
+    {
+      name: 'max_quantity',
+      type: 'number',
+      admin: {
+        description: 'Maximum stock level',
+      },
+    },
+    {
+      name: 'unit_cost',
+      type: 'number',
+      admin: {
+        description: 'Cost per unit',
+      },
+    },
+    {
+      name: 'unit_price',
+      type: 'number',
+      admin: {
+        description: 'Selling price per unit',
+      },
     },
     {
       name: 'manufacturer',
@@ -47,8 +77,55 @@ export const Inventory: CollectionConfig = {
       relationTo: 'manufacturers',
     },
     {
-      name: 'quantity',
-      type: 'number',
+      name: 'location',
+      type: 'text',
+      admin: {
+        description: 'Storage location',
+      },
+    },
+    {
+      name: 'status',
+      type: 'select',
+      options: [
+        { label: 'In Stock', value: 'in_stock' },
+        { label: 'Low Stock', value: 'low_stock' },
+        { label: 'Out of Stock', value: 'out_of_stock' },
+        { label: 'Discontinued', value: 'discontinued' },
+      ],
+      defaultValue: 'in_stock',
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'last_updated',
+      type: 'date',
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'notes',
+      type: 'textarea',
     },
   ],
+  hooks: {
+    beforeChange: [
+      async ({ operation, data }: { operation: string; data: any }) => {
+        // Update status based on quantity
+        if (data.quantity !== undefined) {
+          if (data.quantity <= 0) {
+            data.status = 'out_of_stock'
+          } else if (data.quantity <= (data.reorder_point || 5)) {
+            data.status = 'low_stock'
+          } else {
+            data.status = 'in_stock'
+          }
+        }
+
+        data.last_updated = new Date().toISOString()
+        return data
+      },
+    ],
+  },
 }

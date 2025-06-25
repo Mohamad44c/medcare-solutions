@@ -70,6 +70,10 @@ export interface Config {
     scopes: Scope;
     inventory: Inventory;
     part: Part;
+    repairs: Repair;
+    evaluation: Evaluation;
+    quotation: Quotation;
+    invoices: Invoice;
     brands: Brand;
     manufacturers: Manufacturer;
     companies: Company;
@@ -84,6 +88,10 @@ export interface Config {
     scopes: ScopesSelect<false> | ScopesSelect<true>;
     inventory: InventorySelect<false> | InventorySelect<true>;
     part: PartSelect<false> | PartSelect<true>;
+    repairs: RepairsSelect<false> | RepairsSelect<true>;
+    evaluation: EvaluationSelect<false> | EvaluationSelect<true>;
+    quotation: QuotationSelect<false> | QuotationSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
     manufacturers: ManufacturersSelect<false> | ManufacturersSelect<true>;
     companies: CompaniesSelect<false> | CompaniesSelect<true>;
@@ -232,11 +240,35 @@ export interface Inventory {
   id: number;
   name: string;
   part?: (number | Part)[] | null;
-  'scope type': 'rigid' | 'flexible';
-  cost?: number | null;
-  price?: number | null;
-  manufacturer?: (number | null) | Manufacturer;
+  scope_type: 'rigid' | 'flexible';
+  /**
+   * Current stock quantity
+   */
   quantity?: number | null;
+  /**
+   * Minimum quantity before reorder alert
+   */
+  reorder_point?: number | null;
+  /**
+   * Maximum stock level
+   */
+  max_quantity?: number | null;
+  /**
+   * Cost per unit
+   */
+  unit_cost?: number | null;
+  /**
+   * Selling price per unit
+   */
+  unit_price?: number | null;
+  manufacturer?: (number | null) | Manufacturer;
+  /**
+   * Storage location
+   */
+  location?: string | null;
+  status?: ('in_stock' | 'low_stock' | 'out_of_stock' | 'discontinued') | null;
+  last_updated?: string | null;
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -254,6 +286,110 @@ export interface Part {
   price?: number | null;
   manufacturer?: (number | null) | Manufacturer;
   country?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "repairs".
+ */
+export interface Repair {
+  id: number;
+  repair_number: string;
+  scope: number | Scope;
+  evaluation?: (number | null) | Evaluation;
+  quotation?: (number | null) | Quotation;
+  status: 'pending' | 'in_progress' | 'completed' | 'shipped' | 'cancelled';
+  parts_used?:
+    | {
+        part: number | Part;
+        quantity_used: number;
+        unit_cost: number;
+        total_cost?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  labor_cost?: number | null;
+  total_cost?: number | null;
+  notes?: string | null;
+  start_date?: string | null;
+  completion_date?: string | null;
+  created_by?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evaluation".
+ */
+export interface Evaluation {
+  id: number;
+  evaluation_number: string;
+  scope: number | Scope;
+  status: 'pending' | 'in_progress' | 'completed';
+  evaluation_date?: string | null;
+  problems_identified: string;
+  recommended_actions?: string | null;
+  estimated_cost?: number | null;
+  /**
+   * Estimated repair duration in days
+   */
+  estimated_duration?: number | null;
+  evaluated_by?: (number | null) | User;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotation".
+ */
+export interface Quotation {
+  id: number;
+  quotation_number: string;
+  scope: number | Scope;
+  evaluation?: (number | null) | Evaluation;
+  quotation_date?: string | null;
+  offer_validity?: string | null;
+  /**
+   * Delivery period in days
+   */
+  delivery_period?: number | null;
+  problems: string;
+  service_type: 'repair' | 'maintenance' | 'calibration' | 'inspection';
+  parts_cost?: number | null;
+  labor_cost?: number | null;
+  subtotal?: number | null;
+  discount?: number | null;
+  tax?: number | null;
+  price?: number | null;
+  quotation_status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  notes?: string | null;
+  created_by?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  invoice_number: string;
+  scope: number | Scope;
+  repair?: (number | null) | Repair;
+  quotation?: (number | null) | Quotation;
+  invoice_date?: string | null;
+  due_date?: string | null;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  parts_cost?: number | null;
+  labor_cost?: number | null;
+  subtotal?: number | null;
+  tax?: number | null;
+  total_amount?: number | null;
+  payment_terms?: string | null;
+  notes?: string | null;
+  created_by?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -309,6 +445,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'part';
         value: number | Part;
+      } | null)
+    | ({
+        relationTo: 'repairs';
+        value: number | Repair;
+      } | null)
+    | ({
+        relationTo: 'evaluation';
+        value: number | Evaluation;
+      } | null)
+    | ({
+        relationTo: 'quotation';
+        value: number | Quotation;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
       } | null)
     | ({
         relationTo: 'brands';
@@ -399,11 +551,17 @@ export interface ScopesSelect<T extends boolean = true> {
 export interface InventorySelect<T extends boolean = true> {
   name?: T;
   part?: T;
-  'scope type'?: T;
-  cost?: T;
-  price?: T;
-  manufacturer?: T;
+  scope_type?: T;
   quantity?: T;
+  reorder_point?: T;
+  max_quantity?: T;
+  unit_cost?: T;
+  unit_price?: T;
+  manufacturer?: T;
+  location?: T;
+  status?: T;
+  last_updated?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -420,6 +578,100 @@ export interface PartSelect<T extends boolean = true> {
   price?: T;
   manufacturer?: T;
   country?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "repairs_select".
+ */
+export interface RepairsSelect<T extends boolean = true> {
+  repair_number?: T;
+  scope?: T;
+  evaluation?: T;
+  quotation?: T;
+  status?: T;
+  parts_used?:
+    | T
+    | {
+        part?: T;
+        quantity_used?: T;
+        unit_cost?: T;
+        total_cost?: T;
+        id?: T;
+      };
+  labor_cost?: T;
+  total_cost?: T;
+  notes?: T;
+  start_date?: T;
+  completion_date?: T;
+  created_by?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evaluation_select".
+ */
+export interface EvaluationSelect<T extends boolean = true> {
+  evaluation_number?: T;
+  scope?: T;
+  status?: T;
+  evaluation_date?: T;
+  problems_identified?: T;
+  recommended_actions?: T;
+  estimated_cost?: T;
+  estimated_duration?: T;
+  evaluated_by?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotation_select".
+ */
+export interface QuotationSelect<T extends boolean = true> {
+  quotation_number?: T;
+  scope?: T;
+  evaluation?: T;
+  quotation_date?: T;
+  offer_validity?: T;
+  delivery_period?: T;
+  problems?: T;
+  service_type?: T;
+  parts_cost?: T;
+  labor_cost?: T;
+  subtotal?: T;
+  discount?: T;
+  tax?: T;
+  price?: T;
+  quotation_status?: T;
+  notes?: T;
+  created_by?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  invoice_number?: T;
+  scope?: T;
+  repair?: T;
+  quotation?: T;
+  invoice_date?: T;
+  due_date?: T;
+  status?: T;
+  parts_cost?: T;
+  labor_cost?: T;
+  subtotal?: T;
+  tax?: T;
+  total_amount?: T;
+  payment_terms?: T;
+  notes?: T;
+  created_by?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -4,7 +4,7 @@ export const Invoices: CollectionConfig = {
   slug: 'invoices',
   admin: {
     useAsTitle: 'invoice_number',
-    defaultColumns: ['invoice_number', 'scope', 'status', 'total_amount', 'createdAt'],
+    defaultColumns: ['invoice_number', 'scope', 'status', 'total_due', 'createdAt'],
   },
   lockDocuments: {
     duration: 600, // 10 minutes
@@ -70,32 +70,52 @@ export const Invoices: CollectionConfig = {
       required: true,
     },
     {
-      name: 'parts_cost',
+      name: 'unit_price',
       type: 'number',
-      defaultValue: 0,
+      required: true,
+      admin: {
+        description: 'Price per unit',
+      },
     },
     {
-      name: 'labor_cost',
+      name: 'quantity',
       type: 'number',
-      defaultValue: 0,
+      required: true,
+      defaultValue: 1,
+      admin: {
+        description: 'Quantity of units',
+      },
+    },
+    {
+      name: 'total_price',
+      type: 'number',
+      admin: {
+        readOnly: true,
+        description: 'Unit price × Quantity',
+      },
     },
     {
       name: 'subtotal',
       type: 'number',
       admin: {
         readOnly: true,
+        description: 'Same as total price',
       },
     },
     {
       name: 'tax',
       type: 'number',
-      defaultValue: 0,
+      admin: {
+        readOnly: true,
+        description: '11% of subtotal',
+      },
     },
     {
-      name: 'total_amount',
+      name: 'total_due',
       type: 'number',
       admin: {
         readOnly: true,
+        description: 'Subtotal + Tax',
       },
     },
     {
@@ -158,12 +178,23 @@ export const Invoices: CollectionConfig = {
           data.created_by = req.user?.id
         }
 
-        // Calculate totals
-        const subtotal = (data.parts_cost || 0) + (data.labor_cost || 0)
-        data.subtotal = subtotal
+        // Calculate totals automatically
+        if (data.unit_price !== undefined && data.quantity !== undefined) {
+          const unitPrice = parseFloat(data.unit_price) || 0
+          const quantity = parseInt(data.quantity) || 0
 
-        const total = subtotal + (data.tax || 0)
-        data.total_amount = total
+          // Calculate total price (unit price × quantity)
+          data.total_price = unitPrice * quantity
+
+          // Subtotal is the same as total price
+          data.subtotal = data.total_price
+
+          // Calculate tax (11% of subtotal)
+          data.tax = Math.round(data.subtotal * 0.11 * 100) / 100
+
+          // Calculate total due (subtotal + tax)
+          data.total_due = data.subtotal + data.tax
+        }
 
         return data
       },

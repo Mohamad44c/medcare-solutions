@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { PDFGenerator } from '../services/pdfGenerator'
 
 export const Quotation: CollectionConfig = {
   slug: 'quotation',
@@ -109,6 +110,32 @@ export const Quotation: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf_url',
+      type: 'text',
+      admin: {
+        description: 'S3 URL of the generated PDF',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf_generated_at',
+      type: 'date',
+      admin: {
+        description: 'Timestamp when PDF was last generated',
         readOnly: true,
       },
     },

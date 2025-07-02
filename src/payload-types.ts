@@ -376,8 +376,40 @@ export interface Quotation {
   quotation_status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   notes?: string | null;
   created_by?: (number | null) | User;
+  /**
+   * Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.
+   */
+  pdf?: (number | null) | Media;
+  /**
+   * S3 URL of the generated PDF
+   */
+  pdf_url?: string | null;
+  /**
+   * Timestamp when PDF was last generated
+   */
+  pdf_generated_at?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  alt: string;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -435,26 +467,6 @@ export interface Company {
   mofNumber?: string | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -674,6 +686,9 @@ export interface QuotationSelect<T extends boolean = true> {
   quotation_status?: T;
   notes?: T;
   created_by?: T;
+  pdf?: T;
+  pdf_url?: T;
+  pdf_generated_at?: T;
   updatedAt?: T;
   createdAt?: T;
 }

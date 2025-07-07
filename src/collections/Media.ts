@@ -5,6 +5,10 @@ export const Media: CollectionConfig = {
   access: {
     read: () => true,
   },
+  admin: {
+    group: 'Assets',
+    description: 'Media files associated with scopes, repairs, and records.',
+  },
   fields: [
     {
       name: 'alt',

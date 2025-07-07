@@ -3,15 +3,18 @@ import type { CollectionConfig } from 'payload'
 export const Repairs: CollectionConfig = {
   slug: 'repairs',
   admin: {
-    useAsTitle: 'repair_number',
-    defaultColumns: ['repair_number', 'scope', 'status', 'total_cost', 'createdAt'],
+    useAsTitle: 'repairNumber',
+    defaultColumns: ['repairNumber', 'scope', 'status', 'totalCost', 'createdAt'],
+    group: 'Operations',
+    description:
+      'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
   lockDocuments: {
     duration: 600, // 10 minutes
   },
   fields: [
     {
-      name: 'repair_number',
+      name: 'repairNumber',
       type: 'text',
       required: true,
       unique: true,
@@ -40,7 +43,7 @@ export const Repairs: CollectionConfig = {
       type: 'select',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'In Progress', value: 'in_progress' },
+        { label: 'In Progress', value: 'inProgress' },
         { label: 'Completed', value: 'completed' },
         { label: 'Shipped', value: 'shipped' },
         { label: 'Cancelled', value: 'cancelled' },
@@ -49,7 +52,7 @@ export const Repairs: CollectionConfig = {
       required: true,
     },
     {
-      name: 'parts_used',
+      name: 'partsUsed',
       type: 'array',
       fields: [
         {
@@ -59,18 +62,18 @@ export const Repairs: CollectionConfig = {
           required: true,
         },
         {
-          name: 'quantity_used',
+          name: 'quantityUsed',
           type: 'number',
           required: true,
           min: 1,
         },
         {
-          name: 'unit_cost',
+          name: 'unitCost',
           type: 'number',
           required: true,
         },
         {
-          name: 'total_cost',
+          name: 'totalCost',
           type: 'number',
           admin: {
             readOnly: true,
@@ -79,12 +82,12 @@ export const Repairs: CollectionConfig = {
       ],
     },
     {
-      name: 'labor_cost',
+      name: 'laborCost',
       type: 'number',
       defaultValue: 0,
     },
     {
-      name: 'total_cost',
+      name: 'totalCost',
       type: 'number',
       admin: {
         readOnly: true,
@@ -95,7 +98,7 @@ export const Repairs: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'start_date',
+      name: 'startDate',
       type: 'date',
       admin: {
         date: {
@@ -105,7 +108,7 @@ export const Repairs: CollectionConfig = {
       },
     },
     {
-      name: 'completion_date',
+      name: 'completionDate',
       type: 'date',
       admin: {
         date: {
@@ -115,7 +118,7 @@ export const Repairs: CollectionConfig = {
       },
     },
     {
-      name: 'created_by',
+      name: 'createdBy',
       type: 'relationship',
       relationTo: 'users',
       admin: {
@@ -149,31 +152,31 @@ export const Repairs: CollectionConfig = {
           const result = await req.payload.find({
             collection: 'repairs',
             limit: 1,
-            sort: '-repair_number',
+            sort: '-repairNumber',
           })
 
           let nextNumber = 1
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].repair_number
+            const lastNumber = result.docs[0].repairNumber
             const match = lastNumber.match(/^R(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.repair_number = `R${nextNumber.toString().padStart(4, '0')}`
-          data.created_by = req.user?.id
+          data.repairNumber = `R${nextNumber.toString().padStart(4, '0')}`
+          data.createdBy = req.user?.id
         }
 
         // Calculate total cost from parts and labor
-        if (data.parts_used && Array.isArray(data.parts_used)) {
-          const partsTotal = data.parts_used.reduce((sum: number, part: any) => {
-            const partTotal = (part.quantity_used || 0) * (part.unit_cost || 0)
-            part.total_cost = partTotal
+        if (data.partsUsed && Array.isArray(data.partsUsed)) {
+          const partsTotal = data.partsUsed.reduce((sum: number, part: any) => {
+            const partTotal = (part.quantityUsed || 0) * (part.unitCost || 0)
+            part.totalCost = partTotal
             return sum + partTotal
           }, 0)
 
-          data.total_cost = partsTotal + (data.labor_cost || 0)
+          data.totalCost = partsTotal + (data.laborCost || 0)
         }
 
         return data
@@ -183,9 +186,9 @@ export const Repairs: CollectionConfig = {
       async ({ req, operation, doc }: { req: any; operation: string; doc: any }) => {
         // Deduct parts from inventory when repair is created or parts are updated
         if (operation === 'create' || operation === 'update') {
-          if (doc.parts_used && Array.isArray(doc.parts_used)) {
-            for (const partUsed of doc.parts_used) {
-              if (partUsed.part && partUsed.quantity_used) {
+          if (doc.partsUsed && Array.isArray(doc.partsUsed)) {
+            for (const partUsed of doc.partsUsed) {
+              if (partUsed.part && partUsed.quantityUsed) {
                 // Get current inventory for this part
                 const inventoryResult = await req.payload.find({
                   collection: 'inventory',
@@ -198,10 +201,7 @@ export const Repairs: CollectionConfig = {
 
                 if (inventoryResult.docs.length > 0) {
                   const inventory = inventoryResult.docs[0]
-                  const newQuantity = Math.max(
-                    0,
-                    (inventory.quantity || 0) - partUsed.quantity_used,
-                  )
+                  const newQuantity = Math.max(0, (inventory.quantity || 0) - partUsed.quantityUsed)
 
                   await req.payload.update({
                     collection: 'inventory',

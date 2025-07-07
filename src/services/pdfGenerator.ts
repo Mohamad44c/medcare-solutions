@@ -2,9 +2,9 @@ import puppeteer from 'puppeteer'
 import path from 'path'
 
 interface QuotationData {
-  quotation_number: string
-  quotation_date: string
-  offer_validity: string
+  quotationNumber: string
+  quotationDate: string
+  offerValidity: string
   scope: {
     name: string
     modelNumber: string
@@ -19,9 +19,9 @@ interface QuotationData {
       address?: string
     }
   }
-  delivery_period: number
+  deliveryPeriod: number
   problems: string
-  service_type: string
+  serviceType: string
   price: number
   discount: number
   notes?: string
@@ -49,7 +49,7 @@ export class PDFGenerator {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quotation ${data.quotation_number}</title>
+        <title>Quotation ${data.quotationNumber}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -149,10 +149,10 @@ export class PDFGenerator {
           <div class="quotation-title">
             <h1 class="heading">QUOTATION</h1>
             <div class="quotation-details">
-              <div><strong>Quotation#:</strong> ${data.quotation_number}</div>
+              <div><strong>Quotation#:</strong> ${data.quotationNumber}</div>
               <div><strong>Sales Person:</strong> MCS Sales</div>
-              <div><strong>Offer Validity:</strong> ${this.formatDate(data.offer_validity)}</div>
-              <div><strong>Date:</strong> ${this.formatDate(data.quotation_date)}</div>
+              <div><strong>Offer Validity:</strong> ${this.formatDate(data.offerValidity)}</div>
+              <div><strong>Date:</strong> ${this.formatDate(data.quotationDate)}</div>
             </div>
           </div>
         </div>
@@ -181,7 +181,7 @@ export class PDFGenerator {
               <td>${data.scope.modelNumber}</td>
               <td>${data.scope.serialNumber}</td>
               <td>${this.formatDate(data.scope.receivedDate)}</td>
-              <td>${data.delivery_period || 0} days</td>
+              <td>${data.deliveryPeriod || 0} days</td>
             </tr>
           </tbody>
         </table>
@@ -197,7 +197,7 @@ export class PDFGenerator {
           </thead>
           <tbody>
             <tr>
-              <td>${data.service_type} - ${data.problems}</td>
+              <td>${data.serviceType} - ${data.problems}</td>
               <td>$${data.price.toFixed(2)}</td>
               <td>1</td>
               <td>$${data.price.toFixed(2)}</td>
@@ -225,7 +225,7 @@ export class PDFGenerator {
           <h3 class="heading">Payment Terms and Conditions</h3>
           <p>- The payment is to 100% upon delivery</p>
           <p>- The payment is to be in Cash USD </p>
-          <p>- Repair time frame: ${data.delivery_period || 0} days after confirmation</p>
+          <p>- Repair time frame: ${data.deliveryPeriod || 0} days after confirmation</p>
           <p>- TVA will be added to the total amount</p>
           <p>- Above equipment is covered with 3 months limited warranty</p>
           <p>- Price terms at customer's site</p>

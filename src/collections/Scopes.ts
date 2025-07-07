@@ -16,6 +16,9 @@ export const Scopes: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['code', 'name', 'type', 'status'],
+    group: 'Operations',
+    description:
+      'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
   fields: [
     {
@@ -42,7 +45,7 @@ export const Scopes: CollectionConfig = {
           unique: true,
         },
         {
-          name: 'Company',
+          name: 'company',
           type: 'text',
         },
         {

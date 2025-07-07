@@ -4,6 +4,8 @@ export const Companies: CollectionConfig = {
   slug: 'companies',
   admin: {
     useAsTitle: 'name',
+    group: 'Business Entities',
+    description: 'Manage companies and their details',
   },
   fields: [
     {

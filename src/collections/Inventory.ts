@@ -4,7 +4,7 @@ export const Inventory: CollectionConfig = {
   slug: 'inventory',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'part', 'quantity', 'reorder_point', 'status'],
+    defaultColumns: ['name', 'part', 'quantity', 'reorderPoint', 'status'],
     group: 'Inventory Management',
     description: 'Manage inventory items and track stock levels',
   },
@@ -26,7 +26,7 @@ export const Inventory: CollectionConfig = {
       hasMany: true,
     },
     {
-      name: 'scope_type',
+      name: 'scopeType',
       type: 'select',
       options: [
         { label: 'Rigid', value: 'rigid' },
@@ -43,7 +43,7 @@ export const Inventory: CollectionConfig = {
       },
     },
     {
-      name: 'reorder_point',
+      name: 'reorderPoint',
       type: 'number',
       defaultValue: 5,
       admin: {
@@ -51,21 +51,21 @@ export const Inventory: CollectionConfig = {
       },
     },
     {
-      name: 'max_quantity',
+      name: 'maxQuantity',
       type: 'number',
       admin: {
         description: 'Maximum stock level',
       },
     },
     {
-      name: 'unit_cost',
+      name: 'unitCost',
       type: 'number',
       admin: {
         description: 'Cost per unit',
       },
     },
     {
-      name: 'unit_price',
+      name: 'unitPrice',
       type: 'number',
       admin: {
         description: 'Selling price per unit',
@@ -87,12 +87,12 @@ export const Inventory: CollectionConfig = {
       name: 'status',
       type: 'select',
       options: [
-        { label: 'In Stock', value: 'in_stock' },
-        { label: 'Low Stock', value: 'low_stock' },
-        { label: 'Out of Stock', value: 'out_of_stock' },
+        { label: 'In Stock', value: 'inStock' },
+        { label: 'Low Stock', value: 'lowStock' },
+        { label: 'Out of Stock', value: 'outOfStock' },
         { label: 'Discontinued', value: 'discontinued' },
       ],
-      defaultValue: 'in_stock',
+      defaultValue: 'inStock',
       admin: {
         readOnly: true,
         style: {
@@ -103,7 +103,7 @@ export const Inventory: CollectionConfig = {
       },
     },
     {
-      name: 'last_updated',
+      name: 'lastUpdated',
       type: 'date',
       admin: {
         readOnly: true,
@@ -138,15 +138,15 @@ export const Inventory: CollectionConfig = {
         // Update status based on quantity
         if (data.quantity !== undefined) {
           if (data.quantity <= 0) {
-            data.status = 'out_of_stock'
-          } else if (data.quantity <= (data.reorder_point || 5)) {
-            data.status = 'low_stock'
+            data.status = 'outOfStock'
+          } else if (data.quantity <= (data.reorderPoint || 5)) {
+            data.status = 'lowStock'
           } else {
-            data.status = 'in_stock'
+            data.status = 'inStock'
           }
         }
 
-        data.last_updated = new Date().toISOString()
+        data.lastUpdated = new Date().toISOString()
         return data
       },
     ],

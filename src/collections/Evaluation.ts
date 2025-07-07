@@ -3,15 +3,18 @@ import type { CollectionConfig } from 'payload'
 export const Evaluation: CollectionConfig = {
   slug: 'evaluation',
   admin: {
-    useAsTitle: 'evaluation_number',
-    defaultColumns: ['evaluation_number', 'scope', 'status', 'createdAt'],
+    useAsTitle: 'evaluationNumber',
+    defaultColumns: ['evaluationNumber', 'scope', 'status', 'createdAt'],
+    group: 'Operations',
+    description:
+      'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
   lockDocuments: {
     duration: 600, // 10 minutes
   },
   fields: [
     {
-      name: 'evaluation_number',
+      name: 'evaluationNumber',
       type: 'text',
       required: true,
       unique: true,
@@ -30,14 +33,14 @@ export const Evaluation: CollectionConfig = {
       type: 'select',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'In Progress', value: 'in_progress' },
+        { label: 'In Progress', value: 'inProgress' },
         { label: 'Completed', value: 'completed' },
       ],
       defaultValue: 'pending',
       required: true,
     },
     {
-      name: 'evaluation_date',
+      name: 'evaluationDate',
       type: 'date',
       defaultValue: () => new Date().toISOString(),
       admin: {
@@ -48,27 +51,27 @@ export const Evaluation: CollectionConfig = {
       },
     },
     {
-      name: 'problems_identified',
+      name: 'problemsIdentified',
       type: 'textarea',
       required: true,
     },
     {
-      name: 'recommended_actions',
+      name: 'recommendedActions',
       type: 'textarea',
     },
     {
-      name: 'estimated_cost',
+      name: 'estimatedCost',
       type: 'number',
     },
     {
-      name: 'estimated_duration',
+      name: 'estimatedDuration',
       type: 'number',
       admin: {
         description: 'Estimated repair duration in days',
       },
     },
     {
-      name: 'evaluated_by',
+      name: 'evaluatedBy',
       type: 'relationship',
       relationTo: 'users',
       admin: {
@@ -106,20 +109,20 @@ export const Evaluation: CollectionConfig = {
           const result = await req.payload.find({
             collection: 'evaluation',
             limit: 1,
-            sort: '-evaluation_number',
+            sort: '-evaluationNumber',
           })
 
           let nextNumber = 1
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].evaluation_number
+            const lastNumber = result.docs[0].evaluationNumber
             const match = lastNumber.match(/^E(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.evaluation_number = `E${nextNumber.toString().padStart(4, '0')}`
-          data.evaluated_by = req.user?.id
+          data.evaluationNumber = `E${nextNumber.toString().padStart(4, '0')}`
+          data.evaluatedBy = req.user?.id
         }
 
         return data

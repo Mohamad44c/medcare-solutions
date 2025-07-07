@@ -138,6 +138,8 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "scopes".
  */
@@ -145,7 +147,7 @@ export interface Scope {
   id: number;
   code?: string | null;
   name: string;
-  Company?: string | null;
+  company?: string | null;
   type: 'rigid' | 'flexible';
   modelNumber: string;
   serialNumber: string;
@@ -173,6 +175,8 @@ export interface Scope {
   createdAt: string;
 }
 /**
+ * Manage inventory items and track stock levels
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brands".
  */
@@ -184,6 +188,8 @@ export interface Brand {
   createdAt: string;
 }
 /**
+ * Manage inventory items and track stock levels
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "manufacturers".
  */
@@ -216,6 +222,8 @@ export interface Manufacturer {
   createdAt: string;
 }
 /**
+ * Manage users and their details
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -251,7 +259,7 @@ export interface Inventory {
   id: number;
   name: string;
   part?: (number | Part)[] | null;
-  scope_type: 'rigid' | 'flexible';
+  scopeType: 'rigid' | 'flexible';
   /**
    * Current stock quantity
    */
@@ -259,38 +267,40 @@ export interface Inventory {
   /**
    * Minimum quantity before reorder alert
    */
-  reorder_point?: number | null;
+  reorderPoint?: number | null;
   /**
    * Maximum stock level
    */
-  max_quantity?: number | null;
+  maxQuantity?: number | null;
   /**
    * Cost per unit
    */
-  unit_cost?: number | null;
+  unitCost?: number | null;
   /**
    * Selling price per unit
    */
-  unit_price?: number | null;
+  unitPrice?: number | null;
   manufacturer?: (number | null) | Manufacturer;
   /**
    * Storage location
    */
   location?: string | null;
-  status?: ('in_stock' | 'low_stock' | 'out_of_stock' | 'discontinued') | null;
-  last_updated?: string | null;
+  status?: ('inStock' | 'lowStock' | 'outOfStock' | 'discontinued') | null;
+  lastUpdated?: string | null;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Manage inventory items and track stock levels
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "part".
  */
 export interface Part {
   id: number;
-  part_name: string;
-  part_number: string;
+  partName: string;
+  partNumber: string;
   length?: number | null;
   diameter?: number | null;
   cost?: number | null;
@@ -301,81 +311,87 @@ export interface Part {
   createdAt: string;
 }
 /**
+ * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "repairs".
  */
 export interface Repair {
   id: number;
-  repair_number: string;
+  repairNumber: string;
   scope: number | Scope;
   evaluation?: (number | null) | Evaluation;
   quotation?: (number | null) | Quotation;
-  status: 'pending' | 'in_progress' | 'completed' | 'shipped' | 'cancelled';
-  parts_used?:
+  status: 'pending' | 'inProgress' | 'completed' | 'shipped' | 'cancelled';
+  partsUsed?:
     | {
         part: number | Part;
-        quantity_used: number;
-        unit_cost: number;
-        total_cost?: number | null;
+        quantityUsed: number;
+        unitCost: number;
+        totalCost?: number | null;
         id?: string | null;
       }[]
     | null;
-  labor_cost?: number | null;
-  total_cost?: number | null;
+  laborCost?: number | null;
+  totalCost?: number | null;
   notes?: string | null;
-  start_date?: string | null;
-  completion_date?: string | null;
-  created_by?: (number | null) | User;
+  startDate?: string | null;
+  completionDate?: string | null;
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "evaluation".
  */
 export interface Evaluation {
   id: number;
-  evaluation_number: string;
+  evaluationNumber: string;
   scope: number | Scope;
-  status: 'pending' | 'in_progress' | 'completed';
-  evaluation_date?: string | null;
-  problems_identified: string;
-  recommended_actions?: string | null;
-  estimated_cost?: number | null;
+  status: 'pending' | 'inProgress' | 'completed';
+  evaluationDate?: string | null;
+  problemsIdentified: string;
+  recommendedActions?: string | null;
+  estimatedCost?: number | null;
   /**
    * Estimated repair duration in days
    */
-  estimated_duration?: number | null;
-  evaluated_by?: (number | null) | User;
+  estimatedDuration?: number | null;
+  evaluatedBy?: (number | null) | User;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "quotation".
  */
 export interface Quotation {
   id: number;
-  quotation_number: string;
+  quotationNumber: string;
   scope: number | Scope;
   evaluation?: (number | null) | Evaluation;
-  quotation_date?: string | null;
-  offer_validity?: string | null;
+  quotationDate?: string | null;
+  offerValidity?: string | null;
   /**
    * Delivery period in days
    */
-  delivery_period?: number | null;
+  deliveryPeriod?: number | null;
   problems: string;
-  service_type: 'repair' | 'maintenance' | 'calibration' | 'inspection';
+  serviceType: 'repair' | 'maintenance' | 'calibration' | 'inspection';
   /**
    * Total quotation price
    */
   price: number;
   discount?: number | null;
-  quotation_status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  quotationStatus: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   notes?: string | null;
-  created_by?: (number | null) | User;
+  createdBy?: (number | null) | User;
   /**
    * Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.
    */
@@ -383,15 +399,17 @@ export interface Quotation {
   /**
    * S3 URL of the generated PDF
    */
-  pdf_url?: string | null;
+  pdfUrl?: string | null;
   /**
    * Timestamp when PDF was last generated
    */
-  pdf_generated_at?: string | null;
+  pdfGeneratedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Media files associated with scopes, repairs, and records.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
@@ -412,30 +430,32 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "invoices".
  */
 export interface Invoice {
   id: number;
-  invoice_number: string;
+  invoiceNumber: string;
   scope: number | Scope;
   repair?: (number | null) | Repair;
   quotation?: (number | null) | Quotation;
-  invoice_date?: string | null;
-  due_date?: string | null;
+  invoiceDate?: string | null;
+  dueDate?: string | null;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   /**
    * Price per unit
    */
-  unit_price: number;
+  unitPrice: number;
   /**
    * Quantity of units
    */
   quantity: number;
   /**
-   * Unit price × Quantity
+   * Unit price * Quantity
    */
-  total_price?: number | null;
+  totalPrice?: number | null;
   /**
    * Same as total price
    */
@@ -447,14 +467,16 @@ export interface Invoice {
   /**
    * Subtotal + Tax
    */
-  total_due?: number | null;
-  payment_terms?: string | null;
+  totalDue?: number | null;
+  paymentTerms?: string | null;
   notes?: string | null;
-  created_by?: (number | null) | User;
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Manage companies and their details
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "companies".
  */
@@ -572,7 +594,7 @@ export interface PayloadMigration {
 export interface ScopesSelect<T extends boolean = true> {
   code?: T;
   name?: T;
-  Company?: T;
+  company?: T;
   type?: T;
   modelNumber?: T;
   serialNumber?: T;
@@ -592,16 +614,16 @@ export interface ScopesSelect<T extends boolean = true> {
 export interface InventorySelect<T extends boolean = true> {
   name?: T;
   part?: T;
-  scope_type?: T;
+  scopeType?: T;
   quantity?: T;
-  reorder_point?: T;
-  max_quantity?: T;
-  unit_cost?: T;
-  unit_price?: T;
+  reorderPoint?: T;
+  maxQuantity?: T;
+  unitCost?: T;
+  unitPrice?: T;
   manufacturer?: T;
   location?: T;
   status?: T;
-  last_updated?: T;
+  lastUpdated?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -611,8 +633,8 @@ export interface InventorySelect<T extends boolean = true> {
  * via the `definition` "part_select".
  */
 export interface PartSelect<T extends boolean = true> {
-  part_name?: T;
-  part_number?: T;
+  partName?: T;
+  partNumber?: T;
   length?: T;
   diameter?: T;
   cost?: T;
@@ -627,26 +649,26 @@ export interface PartSelect<T extends boolean = true> {
  * via the `definition` "repairs_select".
  */
 export interface RepairsSelect<T extends boolean = true> {
-  repair_number?: T;
+  repairNumber?: T;
   scope?: T;
   evaluation?: T;
   quotation?: T;
   status?: T;
-  parts_used?:
+  partsUsed?:
     | T
     | {
         part?: T;
-        quantity_used?: T;
-        unit_cost?: T;
-        total_cost?: T;
+        quantityUsed?: T;
+        unitCost?: T;
+        totalCost?: T;
         id?: T;
       };
-  labor_cost?: T;
-  total_cost?: T;
+  laborCost?: T;
+  totalCost?: T;
   notes?: T;
-  start_date?: T;
-  completion_date?: T;
-  created_by?: T;
+  startDate?: T;
+  completionDate?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -655,15 +677,15 @@ export interface RepairsSelect<T extends boolean = true> {
  * via the `definition` "evaluation_select".
  */
 export interface EvaluationSelect<T extends boolean = true> {
-  evaluation_number?: T;
+  evaluationNumber?: T;
   scope?: T;
   status?: T;
-  evaluation_date?: T;
-  problems_identified?: T;
-  recommended_actions?: T;
-  estimated_cost?: T;
-  estimated_duration?: T;
-  evaluated_by?: T;
+  evaluationDate?: T;
+  problemsIdentified?: T;
+  recommendedActions?: T;
+  estimatedCost?: T;
+  estimatedDuration?: T;
+  evaluatedBy?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -673,22 +695,22 @@ export interface EvaluationSelect<T extends boolean = true> {
  * via the `definition` "quotation_select".
  */
 export interface QuotationSelect<T extends boolean = true> {
-  quotation_number?: T;
+  quotationNumber?: T;
   scope?: T;
   evaluation?: T;
-  quotation_date?: T;
-  offer_validity?: T;
-  delivery_period?: T;
+  quotationDate?: T;
+  offerValidity?: T;
+  deliveryPeriod?: T;
   problems?: T;
-  service_type?: T;
+  serviceType?: T;
   price?: T;
   discount?: T;
-  quotation_status?: T;
+  quotationStatus?: T;
   notes?: T;
-  created_by?: T;
+  createdBy?: T;
   pdf?: T;
-  pdf_url?: T;
-  pdf_generated_at?: T;
+  pdfUrl?: T;
+  pdfGeneratedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -697,22 +719,22 @@ export interface QuotationSelect<T extends boolean = true> {
  * via the `definition` "invoices_select".
  */
 export interface InvoicesSelect<T extends boolean = true> {
-  invoice_number?: T;
+  invoiceNumber?: T;
   scope?: T;
   repair?: T;
   quotation?: T;
-  invoice_date?: T;
-  due_date?: T;
+  invoiceDate?: T;
+  dueDate?: T;
   status?: T;
-  unit_price?: T;
+  unitPrice?: T;
   quantity?: T;
-  total_price?: T;
+  totalPrice?: T;
   subtotal?: T;
   tax?: T;
-  total_due?: T;
-  payment_terms?: T;
+  totalDue?: T;
+  paymentTerms?: T;
   notes?: T;
-  created_by?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

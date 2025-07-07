@@ -3,16 +3,18 @@ import type { CollectionConfig } from 'payload'
 export const Part: CollectionConfig = {
   slug: 'part',
   admin: {
-    useAsTitle: 'part_name',
+    useAsTitle: 'partName',
+    group: 'Inventory Management',
+    description: 'Manage inventory items and track stock levels',
   },
   fields: [
     {
-      name: 'part_name',
+      name: 'partName',
       type: 'text',
       required: true,
     },
     {
-      name: 'part_number',
+      name: 'partNumber',
       type: 'text',
       required: true,
     },

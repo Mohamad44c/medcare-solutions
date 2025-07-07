@@ -4,6 +4,8 @@ export const Brands: CollectionConfig = {
   slug: 'brands',
   admin: {
     useAsTitle: 'title',
+    group: 'Inventory Management',
+    description: 'Manage inventory items and track stock levels',
   },
   fields: [
     {

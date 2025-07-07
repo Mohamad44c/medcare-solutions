@@ -3,15 +3,18 @@ import type { CollectionConfig } from 'payload'
 export const Invoices: CollectionConfig = {
   slug: 'invoices',
   admin: {
-    useAsTitle: 'invoice_number',
-    defaultColumns: ['invoice_number', 'scope', 'status', 'total_due', 'createdAt'],
+    useAsTitle: 'invoiceNumber',
+    defaultColumns: ['invoiceNumber', 'scope', 'status', 'totalDue', 'createdAt'],
+    group: 'Operations',
+    description:
+      'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
   lockDocuments: {
     duration: 600, // 10 minutes
   },
   fields: [
     {
-      name: 'invoice_number',
+      name: 'invoiceNumber',
       type: 'text',
       required: true,
       unique: true,
@@ -36,7 +39,7 @@ export const Invoices: CollectionConfig = {
       relationTo: 'quotation',
     },
     {
-      name: 'invoice_date',
+      name: 'invoiceDate',
       type: 'date',
       defaultValue: () => new Date().toISOString(),
       admin: {
@@ -47,7 +50,7 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
-      name: 'due_date',
+      name: 'dueDate',
       type: 'date',
       admin: {
         date: {
@@ -70,7 +73,7 @@ export const Invoices: CollectionConfig = {
       required: true,
     },
     {
-      name: 'unit_price',
+      name: 'unitPrice',
       type: 'number',
       required: true,
       admin: {
@@ -87,11 +90,11 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
-      name: 'total_price',
+      name: 'totalPrice',
       type: 'number',
       admin: {
         readOnly: true,
-        description: 'Unit price × Quantity',
+        description: 'Unit price * Quantity',
       },
     },
     {
@@ -111,7 +114,7 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
-      name: 'total_due',
+      name: 'totalDue',
       type: 'number',
       admin: {
         readOnly: true,
@@ -119,7 +122,7 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
-      name: 'payment_terms',
+      name: 'paymentTerms',
       type: 'text',
       defaultValue: 'Net 30',
     },
@@ -128,7 +131,7 @@ export const Invoices: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'created_by',
+      name: 'createdBy',
       type: 'relationship',
       relationTo: 'users',
       admin: {
@@ -162,38 +165,38 @@ export const Invoices: CollectionConfig = {
           const result = await req.payload.find({
             collection: 'invoices',
             limit: 1,
-            sort: '-invoice_number',
+            sort: '-invoiceNumber',
           })
 
           let nextNumber = 1
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].invoice_number
+            const lastNumber = result.docs[0].invoiceNumber
             const match = lastNumber.match(/^INV(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.invoice_number = `INV${nextNumber.toString().padStart(4, '0')}`
-          data.created_by = req.user?.id
+          data.invoiceNumber = `INV${nextNumber.toString().padStart(4, '0')}`
+          data.createdBy = req.user?.id
         }
 
         // Calculate totals automatically
-        if (data.unit_price !== undefined && data.quantity !== undefined) {
-          const unitPrice = parseFloat(data.unit_price) || 0
+        if (data.unitPrice !== undefined && data.quantity !== undefined) {
+          const unitPrice = parseFloat(data.unitPrice) || 0
           const quantity = parseInt(data.quantity) || 0
 
           // Calculate total price (unit price × quantity)
-          data.total_price = unitPrice * quantity
+          data.totalPrice = unitPrice * quantity
 
           // Subtotal is the same as total price
-          data.subtotal = data.total_price
+          data.subtotal = data.totalPrice
 
           // Calculate tax (11% of subtotal)
           data.tax = Math.round(data.subtotal * 0.11 * 100) / 100
 
           // Calculate total due (subtotal + tax)
-          data.total_due = data.subtotal + data.tax
+          data.totalDue = data.subtotal + data.tax
         }
 
         return data

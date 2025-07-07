@@ -26,6 +26,8 @@ export const Manufacturers: CollectionConfig = {
   slug: 'manufacturers',
   admin: {
     useAsTitle: 'companyName',
+    group: 'Inventory Management',
+    description: 'Manage inventory items and track stock levels',
   },
   fields: [
     {

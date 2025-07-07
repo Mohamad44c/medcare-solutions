@@ -65,8 +65,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
     console.log('Scope fetched:', scope?.name)
     console.log('Full scope data:', JSON.stringify(scope, null, 2))
-    console.log('Scope.Company value:', scope?.Company)
-    console.log('Scope.Company type:', typeof scope?.Company)
+    console.log('Scope.Company value:', scope?.company)
+    console.log('Scope.Company type:', typeof scope?.company)
 
     // Fetch brand details if available
     let brandData = null
@@ -111,9 +111,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.error('Error listing companies:', listError)
     }
 
-    if (scope.Company) {
-      console.log('Scope has company reference:', scope.Company)
-      const companyName = scope.Company
+    if (scope.company) {
+      console.log('Scope has company reference:', scope.company)
+      const companyName = scope.company
       console.log('Company name to search for:', companyName)
 
       try {
@@ -154,9 +154,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Prepare data for PDF generation
     console.log('Preparing PDF data...')
     const pdfData = {
-      quotation_number: quotation.quotation_number,
-      quotation_date: quotation.quotation_date || new Date().toISOString(),
-      offer_validity: quotation.offer_validity || '',
+      quotationNumber: quotation.quotationNumber,
+      quotationDate: quotation.quotationDate || new Date().toISOString(),
+      offerValidity: quotation.offerValidity || '',
       scope: {
         name: scope.name,
         modelNumber: scope.modelNumber,
@@ -165,9 +165,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         company: companyData,
         brand: brandData,
       },
-      delivery_period: quotation.delivery_period || 0,
+      deliveryPeriod: quotation.deliveryPeriod || 0,
       problems: quotation.problems,
-      service_type: quotation.service_type,
+      serviceType: quotation.serviceType,
       price: quotation.price,
       discount: quotation.discount || 0,
       notes: quotation.notes || '',
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Upload PDF to S3
     console.log('Uploading PDF to S3...')
-    const fileName = `quotations/quotation-${quotation.quotation_number}-${Date.now()}.pdf`
+    const fileName = `quotations/quotation-${quotation.quotationNumber}-${Date.now()}.pdf`
 
     try {
       const uploadCommand = new PutObjectCommand({
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         Key: fileName,
         Body: pdfBuffer,
         ContentType: 'application/pdf',
-        ContentDisposition: `attachment; filename="quotation-${quotation.quotation_number}.pdf"`,
+        ContentDisposition: `attachment; filename="quotation-${quotation.quotationNumber}.pdf"`,
       })
 
       await s3Client.send(uploadCommand)
@@ -206,8 +206,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           collection: 'quotation',
           id,
           data: {
-            pdf_url: s3Url,
-            pdf_generated_at: new Date().toISOString(),
+            pdfUrl: s3Url,
+            pdfGeneratedAt: new Date().toISOString(),
           },
         })
         console.log('Quotation updated with PDF URL')
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({
         success: true,
         pdfUrl: s3Url,
-        quotationNumber: quotation.quotation_number,
+        quotationNumber: quotation.quotationNumber,
         message: 'PDF generated and uploaded to S3 successfully',
       })
     } catch (s3Error) {
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({
         success: true,
         pdfUrl: dataUrl,
-        quotationNumber: quotation.quotation_number,
+        quotationNumber: quotation.quotationNumber,
         message: 'PDF generated successfully (S3 upload failed, using data URL)',
       })
     }

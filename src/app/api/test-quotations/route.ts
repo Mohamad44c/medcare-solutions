@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       'Quotations data:',
       quotations.docs.map((q) => ({
         id: q.id,
-        quotation_number: q.quotation_number,
+        quotationNumber: q.quotationNumber,
         created: q.createdAt,
         updated: q.updatedAt,
       })),
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       count: quotations.docs.length,
       quotations: quotations.docs.map((q) => ({
         id: q.id,
-        quotation_number: q.quotation_number,
+        quotationNumber: q.quotationNumber,
         created: q.createdAt,
         updated: q.updatedAt,
       })),

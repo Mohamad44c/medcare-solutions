@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useConfig } from 'payload/components/utilities'
 
 interface LowStockItem {
   id: string
@@ -12,7 +11,7 @@ interface LowStockItem {
 const LowStockAlert: React.FC = () => {
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
   const [loading, setLoading] = useState(true)
-  const { serverURL } = useConfig()
+  const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || ''
 
   useEffect(() => {
     const fetchLowStockItems = async () => {

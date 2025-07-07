@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url'
 import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 
-import { Users } from './collections/Users'
+import { Users } from './globals/Users'
 import { Media } from './collections/Media'
 import { Brands } from './collections/Brands'
 import { Scopes } from './collections/Scopes'

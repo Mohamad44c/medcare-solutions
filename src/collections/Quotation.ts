@@ -3,15 +3,18 @@ import type { CollectionConfig } from 'payload'
 export const Quotation: CollectionConfig = {
   slug: 'quotation',
   admin: {
-    useAsTitle: 'quotation_number',
-    defaultColumns: ['quotation_number', 'scope', 'quotation_status', 'price', 'createdAt'],
+    useAsTitle: 'quotationNumber',
+    defaultColumns: ['quotationNumber', 'scope', 'quotationStatus', 'price', 'createdAt'],
+    group: 'Operations',
+    description:
+      'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
   lockDocuments: {
     duration: 600, // 10 minutes
   },
   fields: [
     {
-      name: 'quotation_number',
+      name: 'quotationNumber',
       type: 'text',
       required: true,
       unique: true,
@@ -31,7 +34,7 @@ export const Quotation: CollectionConfig = {
       relationTo: 'evaluation',
     },
     {
-      name: 'quotation_date',
+      name: 'quotationDate',
       type: 'date',
       defaultValue: () => new Date().toISOString(),
       admin: {
@@ -42,7 +45,7 @@ export const Quotation: CollectionConfig = {
       },
     },
     {
-      name: 'offer_validity',
+      name: 'offerValidity',
       type: 'date',
       admin: {
         date: {
@@ -52,7 +55,7 @@ export const Quotation: CollectionConfig = {
       },
     },
     {
-      name: 'delivery_period',
+      name: 'deliveryPeriod',
       type: 'number',
       admin: {
         description: 'Delivery period in days',
@@ -64,7 +67,7 @@ export const Quotation: CollectionConfig = {
       required: true,
     },
     {
-      name: 'service_type',
+      name: 'serviceType',
       type: 'select',
       options: [
         { label: 'Repair', value: 'repair' },
@@ -88,7 +91,7 @@ export const Quotation: CollectionConfig = {
       defaultValue: 0,
     },
     {
-      name: 'quotation_status',
+      name: 'quotationStatus',
       type: 'select',
       options: [
         { label: 'Draft', value: 'draft' },
@@ -105,7 +108,7 @@ export const Quotation: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'created_by',
+      name: 'createdBy',
       type: 'relationship',
       relationTo: 'users',
       admin: {
@@ -123,7 +126,7 @@ export const Quotation: CollectionConfig = {
       },
     },
     {
-      name: 'pdf_url',
+      name: 'pdfUrl',
       type: 'text',
       admin: {
         description: 'S3 URL of the generated PDF',
@@ -131,7 +134,7 @@ export const Quotation: CollectionConfig = {
       },
     },
     {
-      name: 'pdf_generated_at',
+      name: 'pdfGeneratedAt',
       type: 'date',
       admin: {
         description: 'Timestamp when PDF was last generated',
@@ -165,20 +168,20 @@ export const Quotation: CollectionConfig = {
           const result = await req.payload.find({
             collection: 'quotation',
             limit: 1,
-            sort: '-quotation_number',
+            sort: '-quotationNumber',
           })
 
           let nextNumber = 1
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].quotation_number
+            const lastNumber = result.docs[0].quotationNumber
             const match = lastNumber.match(/^Q(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.quotation_number = `Q${nextNumber.toString().padStart(4, '0')}`
-          data.created_by = req.user?.id
+          data.quotationNumber = `Q${nextNumber.toString().padStart(4, '0')}`
+          data.createdBy = req.user?.id
         }
 
         return data

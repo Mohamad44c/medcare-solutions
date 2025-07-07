@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { PDFGenerator } from '../services/pdfGenerator'
 
 export const Quotation: CollectionConfig = {
   slug: 'quotation',

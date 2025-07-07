@@ -368,53 +368,26 @@ export interface Quotation {
   delivery_period?: number | null;
   problems: string;
   service_type: 'repair' | 'maintenance' | 'calibration' | 'inspection';
-  parts_cost?: number | null;
-  labor_cost?: number | null;
-  subtotal?: number | null;
+  /**
+   * Total quotation price
+   */
+  price: number;
   discount?: number | null;
-  tax?: number | null;
-  price?: number | null;
   quotation_status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   notes?: string | null;
   created_by?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "invoices".
- */
-export interface Invoice {
-  id: number;
-  invoice_number: string;
-  scope: number | Scope;
-  repair?: (number | null) | Repair;
-  quotation?: (number | null) | Quotation;
-  invoice_date?: string | null;
-  due_date?: string | null;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  parts_cost?: number | null;
-  labor_cost?: number | null;
-  subtotal?: number | null;
-  tax?: number | null;
-  total_amount?: number | null;
-  payment_terms?: string | null;
-  notes?: string | null;
-  created_by?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "companies".
- */
-export interface Company {
-  id: number;
-  name: string;
-  phoneNumber?: number | null;
-  email?: string | null;
-  address?: string | null;
-  mofNumber?: string | null;
+  /**
+   * Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.
+   */
+  pdf?: (number | null) | Media;
+  /**
+   * S3 URL of the generated PDF
+   */
+  pdf_url?: string | null;
+  /**
+   * Timestamp when PDF was last generated
+   */
+  pdf_generated_at?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -437,6 +410,63 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  invoice_number: string;
+  scope: number | Scope;
+  repair?: (number | null) | Repair;
+  quotation?: (number | null) | Quotation;
+  invoice_date?: string | null;
+  due_date?: string | null;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  /**
+   * Price per unit
+   */
+  unit_price: number;
+  /**
+   * Quantity of units
+   */
+  quantity: number;
+  /**
+   * Unit price × Quantity
+   */
+  total_price?: number | null;
+  /**
+   * Same as total price
+   */
+  subtotal?: number | null;
+  /**
+   * 11% of subtotal
+   */
+  tax?: number | null;
+  /**
+   * Subtotal + Tax
+   */
+  total_due?: number | null;
+  payment_terms?: string | null;
+  notes?: string | null;
+  created_by?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies".
+ */
+export interface Company {
+  id: number;
+  name: string;
+  phoneNumber?: number | null;
+  email?: string | null;
+  address?: string | null;
+  mofNumber?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -651,15 +681,14 @@ export interface QuotationSelect<T extends boolean = true> {
   delivery_period?: T;
   problems?: T;
   service_type?: T;
-  parts_cost?: T;
-  labor_cost?: T;
-  subtotal?: T;
-  discount?: T;
-  tax?: T;
   price?: T;
+  discount?: T;
   quotation_status?: T;
   notes?: T;
   created_by?: T;
+  pdf?: T;
+  pdf_url?: T;
+  pdf_generated_at?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -675,11 +704,12 @@ export interface InvoicesSelect<T extends boolean = true> {
   invoice_date?: T;
   due_date?: T;
   status?: T;
-  parts_cost?: T;
-  labor_cost?: T;
+  unit_price?: T;
+  quantity?: T;
+  total_price?: T;
   subtotal?: T;
   tax?: T;
-  total_amount?: T;
+  total_due?: T;
   payment_terms?: T;
   notes?: T;
   created_by?: T;

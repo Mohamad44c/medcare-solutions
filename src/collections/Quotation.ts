@@ -75,38 +75,17 @@ export const Quotation: CollectionConfig = {
       required: true,
     },
     {
-      name: 'parts_cost',
+      name: 'price',
       type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'labor_cost',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'subtotal',
-      type: 'number',
+      required: true,
       admin: {
-        readOnly: true,
+        description: 'Total quotation price',
       },
     },
     {
       name: 'discount',
       type: 'number',
       defaultValue: 0,
-    },
-    {
-      name: 'tax',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'price',
-      type: 'number',
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'quotation_status',
@@ -130,6 +109,32 @@ export const Quotation: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf_url',
+      type: 'text',
+      admin: {
+        description: 'S3 URL of the generated PDF',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'pdf_generated_at',
+      type: 'date',
+      admin: {
+        description: 'Timestamp when PDF was last generated',
         readOnly: true,
       },
     },
@@ -175,14 +180,6 @@ export const Quotation: CollectionConfig = {
           data.quotation_number = `Q${nextNumber.toString().padStart(4, '0')}`
           data.created_by = req.user?.id
         }
-
-        // Calculate totals
-        const subtotal = (data.parts_cost || 0) + (data.labor_cost || 0)
-        data.subtotal = subtotal
-
-        const afterDiscount = subtotal - (data.discount || 0)
-        const afterTax = afterDiscount + (data.tax || 0)
-        data.price = afterTax
 
         return data
       },

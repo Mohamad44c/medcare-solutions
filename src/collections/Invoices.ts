@@ -138,6 +138,29 @@ export const Invoices: CollectionConfig = {
         readOnly: true,
       },
     },
+    {
+      name: 'pdf',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Generated invoice PDF. Use the API endpoint /api/invoices/{id}/generate-pdf to generate and download the PDF.',
+      },
+    },
+    {
+      name: 'pdfUrl',
+      type: 'text',
+      admin: {
+        description: 'S3 URL of the generated PDF',
+      },
+    },
+    {
+      name: 'pdfGeneratedAt',
+      type: 'date',
+      admin: {
+        description: 'Timestamp when PDF was last generated',
+      },
+    },
   ],
   access: {
     read: ({ req: { user } }) => {

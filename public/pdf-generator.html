@@ -274,26 +274,38 @@
             <div class="stat-label">Total Quotations</div>
           </div>
           <div class="stat-card">
+            <div class="stat-number" id="totalInvoices">-</div>
+            <div class="stat-label">Total Invoices</div>
+          </div>
+          <div class="stat-card">
             <div class="stat-number" id="generatedPDFs">-</div>
             <div class="stat-label">Generated PDFs</div>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="quotationId">Quotation ID:</label>
+          <label for="documentType">Document Type:</label>
+          <select id="documentType" onchange="onDocumentTypeChange()">
+            <option value="quotation">Quotation</option>
+            <option value="invoice">Invoice</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="documentId">Document ID:</label>
           <input
             type="text"
-            id="quotationId"
-            placeholder="Enter quotation ID or select from list below"
+            id="documentId"
+            placeholder="Enter document ID or select from list below"
           />
         </div>
 
         <div class="button-group">
-          <button onclick="fetchQuotations()" id="loadBtn">
+          <button onclick="fetchDocuments()" id="loadBtn">
             <span>📋</span>
-            Load Quotations
+            Load Documents
           </button>
-          <button onclick="testQuotations()" id="testBtn">
+          <button onclick="testEndpoint()" id="testBtn">
             <span>🔍</span>
             Test Endpoint
           </button>
@@ -314,6 +326,13 @@
 
     <script>
       let isLoading = false
+      let currentDocumentType = 'quotation'
+
+      function onDocumentTypeChange() {
+        currentDocumentType = document.getElementById('documentType').value
+        clearResults()
+        fetchDocuments()
+      }
 
       function setLoading(buttonId, loading) {
         const button = document.getElementById(buttonId)
@@ -333,91 +352,137 @@
         resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`
       }
 
-      async function fetchQuotations() {
-        const quotationsListDiv = document.getElementById('quotationsList')
+      async function fetchDocuments() {
+        const documentsListDiv = document.getElementById('quotationsList')
         setLoading('loadBtn', true)
 
         try {
-          showResult('Loading quotations...', 'info')
+          const endpoint =
+            currentDocumentType === 'quotation'
+              ? '/api/quotations?limit=20'
+              : '/api/invoices?limit=20'
+          showResult(`Loading ${currentDocumentType}s...`, 'info')
 
-          const response = await fetch('/api/quotations?limit=20')
+          const response = await fetch(endpoint)
           console.log('Response status:', response.status)
 
           if (response.ok) {
             const data = await response.json()
-            console.log('Quotations data:', data)
+            console.log(`${currentDocumentType}s data:`, data)
 
             if (data.docs && data.docs.length > 0) {
-              let html = '<h3>📋 Available Quotations:</h3>'
-              data.docs.forEach((quotation) => {
-                const price = quotation.price ? `$${quotation.price}` : 'No price'
-                const scope = quotation.scope?.name || 'No scope'
-                const created = new Date(quotation.createdAt).toLocaleDateString()
+              let html = `<h3>📋 Available ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)}s:</h3>`
+              data.docs.forEach((doc) => {
+                const number =
+                  currentDocumentType === 'quotation' ? doc.quotation_number : doc.invoiceNumber
+                const price =
+                  currentDocumentType === 'quotation'
+                    ? doc.price
+                      ? `$${doc.price}`
+                      : 'No price'
+                    : doc.totalDue
+                      ? `$${doc.totalDue}`
+                      : 'No total'
+                const scope = doc.scope?.name || 'No scope'
+                const created = new Date(doc.createdAt).toLocaleDateString()
+                const status = currentDocumentType === 'invoice' ? ` | Status: ${doc.status}` : ''
 
                 html += `
-                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotation_number}')">
-                    <div class="quotation-number">${quotation.quotation_number}</div>
+                  <div class="quotation-item" onclick="selectDocument('${doc.id}', '${number}')">
+                    <div class="quotation-number">${number}</div>
                     <div class="quotation-details">
-                      Scope: ${scope} | Price: ${price} | Created: ${created}
+                      Scope: ${scope} | ${currentDocumentType === 'quotation' ? 'Price' : 'Total'}: ${price} | Created: ${created}${status}
                     </div>
                   </div>
                 `
               })
 
-              quotationsListDiv.innerHTML = html
-              quotationsListDiv.style.display = 'block'
-              showResult(`✅ Successfully loaded ${data.docs.length} quotations!`, 'success')
+              documentsListDiv.innerHTML = html
+              documentsListDiv.style.display = 'block'
+              showResult(
+                `✅ Successfully loaded ${data.docs.length} ${currentDocumentType}s!`,
+                'success',
+              )
 
               // Update stats
-              document.getElementById('totalQuotations').textContent =
-                data.totalDocs || data.docs.length
+              if (currentDocumentType === 'quotation') {
+                document.getElementById('totalQuotations').textContent =
+                  data.totalDocs || data.docs.length
+              } else {
+                document.getElementById('totalInvoices').textContent =
+                  data.totalDocs || data.docs.length
+              }
             } else {
-              showResult('❌ No quotations found. Please create a quotation first.', 'error')
+              showResult(
+                `❌ No ${currentDocumentType}s found. Please create a ${currentDocumentType} first.`,
+                'error',
+              )
             }
           } else {
             const errorText = await response.text()
             console.error('Error response:', errorText)
-            showResult(`❌ Failed to load quotations. Status: ${response.status}`, 'error')
+            showResult(
+              `❌ Failed to load ${currentDocumentType}s. Status: ${response.status}`,
+              'error',
+            )
           }
         } catch (error) {
           console.error('Error:', error)
-          showResult('❌ Failed to load quotations. Please check the console for details.', 'error')
+          showResult(
+            `❌ Failed to load ${currentDocumentType}s. Please check the console for details.`,
+            'error',
+          )
         } finally {
           setLoading('loadBtn', false)
         }
       }
 
-      async function testQuotations() {
+      async function testEndpoint() {
         setLoading('testBtn', true)
 
         try {
-          showResult('Testing quotations endpoint...', 'info')
+          const endpoint =
+            currentDocumentType === 'quotation' ? '/api/test-quotations' : '/api/test-invoices'
+          showResult(`Testing ${currentDocumentType}s endpoint...`, 'info')
 
-          const response = await fetch('/api/test-quotations')
+          const response = await fetch(endpoint)
 
           if (response.ok) {
             const data = await response.json()
 
-            if (data.quotations && data.quotations.length > 0) {
-              let html = '<h3>🔍 Test Quotations (Raw Data):</h3>'
-              data.quotations.forEach((quotation) => {
-                const created = new Date(quotation.created).toLocaleDateString()
+            if (
+              data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices'] &&
+              data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices'].length > 0
+            ) {
+              let html = `<h3>🔍 Test ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)}s (Raw Data):</h3>`
+              const docs = data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices']
+              docs.forEach((doc) => {
+                const number =
+                  currentDocumentType === 'quotation' ? doc.quotation_number : doc.invoiceNumber
+                const created = new Date(doc.created).toLocaleDateString()
                 html += `
-                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotation_number}')">
-                    <div class="quotation-number">${quotation.quotation_number}</div>
-                    <div class="quotation-details">ID: ${quotation.id} | Created: ${created}</div>
+                  <div class="quotation-item" onclick="selectDocument('${doc.id}', '${number}')">
+                    <div class="quotation-number">${number}</div>
+                    <div class="quotation-details">ID: ${doc.id} | Created: ${created}</div>
                   </div>
                 `
               })
 
               document.getElementById('quotationsList').innerHTML = html
               document.getElementById('quotationsList').style.display = 'block'
-              showResult(`✅ Test successful! Found ${data.count} quotations.`, 'success')
+              showResult(
+                `✅ Test successful! Found ${data.count} ${currentDocumentType}s.`,
+                'success',
+              )
 
               // Update stats
-              document.getElementById('totalQuotations').textContent = data.count
+              if (currentDocumentType === 'quotation') {
+                document.getElementById('totalQuotations').textContent = data.count
+              } else {
+                document.getElementById('totalInvoices').textContent = data.count
+              }
             } else {
-              showResult('❌ No quotations found in test.', 'error')
+              showResult(`❌ No ${currentDocumentType}s found in test.`, 'error')
             }
           } else {
             const errorText = await response.text()
@@ -432,16 +497,19 @@
         }
       }
 
-      function selectQuotation(id, quotationNumber) {
-        document.getElementById('quotationId').value = id
-        showResult(`✅ Selected quotation: ${quotationNumber}`, 'success')
+      function selectDocument(id, number) {
+        document.getElementById('documentId').value = id
+        showResult(`✅ Selected ${currentDocumentType}: ${number}`, 'success')
       }
 
       async function generatePDF() {
-        const quotationId = document.getElementById('quotationId').value
+        const documentId = document.getElementById('documentId').value
 
-        if (!quotationId) {
-          showResult('❌ Please enter a quotation ID or select one from the list', 'error')
+        if (!documentId) {
+          showResult(
+            `❌ Please enter a ${currentDocumentType} ID or select one from the list`,
+            'error',
+          )
           return
         }
 
@@ -450,7 +518,11 @@
         try {
           showResult('🔄 Generating PDF...', 'info')
 
-          const response = await fetch(`/api/quotations/${quotationId}/generate-pdf`, {
+          const endpoint =
+            currentDocumentType === 'quotation'
+              ? `/api/quotations/${documentId}/generate-pdf`
+              : `/api/invoices/${documentId}/generate-pdf`
+          const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -464,14 +536,16 @@
             if (data.pdfUrl) {
               const link = document.createElement('a')
               link.href = data.pdfUrl
-              link.download = `quotation-${data.quotationNumber}.pdf`
+              const number =
+                currentDocumentType === 'quotation' ? data.quotationNumber : data.invoiceNumber
+              link.download = `${currentDocumentType}-${number}.pdf`
               link.target = '_blank'
               document.body.appendChild(link)
               link.click()
               document.body.removeChild(link)
 
               showResult(
-                `✅ PDF generated and downloaded successfully!<br>📄 Quotation Number: ${data.quotationNumber}`,
+                `✅ PDF generated and downloaded successfully!<br>📄 ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)} Number: ${number}`,
                 'success',
               )
 
@@ -501,13 +575,13 @@
       function clearResults() {
         document.getElementById('result').innerHTML = ''
         document.getElementById('quotationsList').style.display = 'none'
-        document.getElementById('quotationId').value = ''
+        document.getElementById('documentId').value = ''
         showResult('🧹 Results cleared!', 'info')
       }
 
-      // Auto-load quotations on page load
+      // Auto-load documents on page load
       window.addEventListener('load', () => {
-        fetchQuotations()
+        fetchDocuments()
       })
     </script>
   </body>

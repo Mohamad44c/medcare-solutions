@@ -27,6 +27,34 @@ interface QuotationData {
   notes?: string
 }
 
+interface InvoiceData {
+  invoiceNumber: string
+  invoiceDate: string
+  mofNumber: string
+  scope: {
+    name: string
+    modelNumber: string
+    serialNumber: string
+    company: {
+      name: string
+      phone?: string
+      address?: string
+    }
+    manufacturer?: {
+      title: string
+    }
+  }
+  quotation?: {
+    serviceType: string
+  }
+  unitPrice: number
+  quantity: number
+  totalPrice: number
+  tax: number
+  totalDue: number
+  dueDate: string
+}
+
 export class PDFGenerator {
   private static formatDate(dateString: string): string {
     if (!dateString) return 'N/A'
@@ -236,6 +264,197 @@ export class PDFGenerator {
     return html
   }
 
+  private static async generateInvoiceHTML(data: InvoiceData): Promise<string> {
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invoice ${data.invoiceNumber}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+          }
+          .company-info {
+            display: flex;
+            align-items: center;
+          }
+          .logo {
+            width: 100px;
+            height: 100px;
+            margin-right: 20px;
+            object-fit: contain;
+          }
+          .contact-info {
+            line-height: 1.4;
+          }
+          .invoice-title {
+            text-align: right;
+          }
+          .invoice-title h1 {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #258bd1 !important;
+          }
+          .invoice-details {
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          .client-info {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #063970;
+          }
+          .client-info strong {
+            color: #063970;
+          }
+          .heading {
+            color: #258bd1 !important;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+          }
+          th {
+            background-color: #258bd1;
+            font-weight: bold;
+            color: white;
+          }
+          .price-table th:last-child,
+          .price-table td:last-child {
+            text-align: right;
+          }
+          .total-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+          }
+          .terms-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+          }
+          .terms-section h3 {
+            margin-top: 0;
+            color: #258bd1 !important;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-info">
+            <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
+            <div class="contact-info">
+              <div>Beirut Lebanon</div>
+              <div>+961 01 555133 | +961 03 788345</div>
+              <div>info@mcs.com</div>
+            </div>
+          </div>
+          <div class="invoice-title">
+            <h1 class="heading">INVOICE</h1>
+            <div class="invoice-details">
+              <div><strong>Invoice#:</strong> ${data.invoiceNumber}</div>
+              <div><strong>MOF#:</strong> ${data.mofNumber}</div>
+              <div><strong>Date:</strong> ${this.formatDate(data.invoiceDate)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="client-info">
+          <strong>To:</strong> ${data.scope.company.name}<br>
+          <strong>Phone:</strong> ${data.scope.company.phone || 'N/A'}<br>
+          <strong>Location:</strong> ${data.scope.company.address || 'N/A'}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Sales Person</th>
+              <th>Shipped Via</th>
+              <th>Due Date</th>
+              <th>Payment Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${data.quotation?.serviceType || 'N/A'}</td>
+              <td>MCS Sales</td>
+              <td>MCS Endoscopy</td>
+              <td>${this.formatDate(data.dueDate)}</td>
+              <td>Pre-paid</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Manufacturer</th>
+              <th>Scope Name</th>
+              <th>Model #</th>
+              <th>Serial #</th>
+              <th>Unit Price</th>
+              <th>Quantity</th>
+              <th>Total Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${data.scope.manufacturer?.title || 'N/A'}</td>
+              <td>${data.scope.name}</td>
+              <td>${data.scope.modelNumber}</td>
+              <td>${data.scope.serialNumber}</td>
+              <td>$${data.unitPrice.toFixed(2)}</td>
+              <td>${data.quantity}</td>
+              <td>$${data.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="6"><strong>Subtotal</strong></td>
+              <td><strong>$${data.totalPrice.toFixed(2)}</strong></td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="6"><strong>TVA (11%)</strong></td>
+              <td><strong>$${data.tax.toFixed(2)}</strong></td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="6"><strong>Total Due</strong></td>
+              <td><strong>$${data.totalDue.toFixed(2)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="terms-section">
+          <h3 class="heading">Payment Terms and Conditions</h3>
+          <p>- Payment is due by: ${this.formatDate(data.dueDate)}</p>
+          <p>- Payment method: Pre-paid</p>
+          <p>- TVA (11%) is included in the total amount</p>
+          <p>- Please include invoice number with payment</p>
+        </div>
+      </body>
+      </html>
+    `
+    return html
+  }
+
   private static async getLogoBase64(): Promise<string> {
     try {
       const fs = await import('fs/promises')
@@ -257,6 +476,35 @@ export class PDFGenerator {
     try {
       const page = await browser.newPage()
       const html = await this.generateQuotationHTML(data)
+
+      await page.setContent(html, { waitUntil: 'networkidle0' })
+
+      const pdf = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm',
+        },
+        printBackground: true,
+      })
+
+      return Buffer.from(pdf)
+    } finally {
+      await browser.close()
+    }
+  }
+
+  public static async generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+
+    try {
+      const page = await browser.newPage()
+      const html = await this.generateInvoiceHTML(data)
 
       await page.setContent(html, { waitUntil: 'networkidle0' })
 

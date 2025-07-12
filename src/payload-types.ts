@@ -471,6 +471,18 @@ export interface Invoice {
   paymentTerms?: string | null;
   notes?: string | null;
   createdBy?: (number | null) | User;
+  /**
+   * Generated invoice PDF. Use the API endpoint /api/invoices/{id}/generate-pdf to generate and download the PDF.
+   */
+  pdf?: (number | null) | Media;
+  /**
+   * S3 URL of the generated PDF
+   */
+  pdfUrl?: string | null;
+  /**
+   * Timestamp when PDF was last generated
+   */
+  pdfGeneratedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -735,6 +747,9 @@ export interface InvoicesSelect<T extends boolean = true> {
   paymentTerms?: T;
   notes?: T;
   createdBy?: T;
+  pdf?: T;
+  pdfUrl?: T;
+  pdfGeneratedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

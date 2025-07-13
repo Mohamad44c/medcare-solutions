@@ -68,16 +68,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
 
-    // Fetch company data if exists
+    // Fetch company data if exists (scope.company is text, not relationship)
     let company = null
     if (scope.company) {
-      const companyId =
-        typeof scope.company === 'string' ? scope.company : (scope.company as any).id
-      company = await payload.findByID({
-        collection: 'companies',
-        id: companyId,
-        depth: 1,
-      })
+      try {
+        console.log('Looking for company:', scope.company)
+
+        // Try to find company by name in the companies collection (case-insensitive)
+        const companiesResult = await payload.find({
+          collection: 'companies',
+          where: {
+            name: {
+              like: scope.company,
+            },
+          },
+          limit: 1,
+        })
+
+        console.log('Companies found:', companiesResult.docs.length)
+        console.log('Search query:', { name: { like: scope.company } })
+        if (companiesResult.docs.length > 0) {
+          company = companiesResult.docs[0]
+          console.log('Company data:', company)
+        } else {
+          console.log('No company found with name:', scope.company)
+        }
+      } catch (companyError) {
+        console.warn('Could not fetch company data:', companyError)
+        // Continue without company data
+      }
     }
 
     // Prepare data for PDF generation
@@ -91,13 +110,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         modelNumber: scope.modelNumber,
         serialNumber: scope.serialNumber,
         company: {
-          name: company ? (company as any).name : scope.company || 'N/A',
-          phone: company ? (company as any).phone || 'N/A' : 'N/A',
+          name: scope.company || 'N/A',
+          phone: company ? String((company as any).phoneNumber || 'N/A') : 'N/A',
           address: company ? (company as any).address || 'N/A' : 'N/A',
         },
         manufacturer: manufacturer
           ? {
-              title: (manufacturer as any).title || (manufacturer as any).name,
+              title: (manufacturer as any).companyName,
             }
           : undefined,
       },

@@ -70,6 +70,86 @@ export class PDFGenerator {
     }
   }
 
+  private static numberToWords(amount: number): string {
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
+    const teens = [
+      'ten',
+      'eleven',
+      'twelve',
+      'thirteen',
+      'fourteen',
+      'fifteen',
+      'sixteen',
+      'seventeen',
+      'eighteen',
+      'nineteen',
+    ]
+    const tens = [
+      '',
+      '',
+      'twenty',
+      'thirty',
+      'forty',
+      'fifty',
+      'sixty',
+      'seventy',
+      'eighty',
+      'ninety',
+    ]
+
+    const convertLessThanOneThousand = (num: number): string => {
+      if (num === 0) return ''
+
+      if (num < 10) return ones[num]
+      if (num < 20) return teens[num - 10]
+      if (num < 100)
+        return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '')
+      if (num < 1000)
+        return (
+          ones[Math.floor(num / 100)] +
+          ' hundred' +
+          (num % 100 !== 0 ? ' and ' + convertLessThanOneThousand(num % 100) : '')
+        )
+
+      return ''
+    }
+
+    const convert = (num: number): string => {
+      if (num === 0) return 'zero'
+      if (num < 1000) return convertLessThanOneThousand(num)
+      if (num < 1000000)
+        return (
+          convertLessThanOneThousand(Math.floor(num / 1000)) +
+          ' thousand' +
+          (num % 1000 !== 0 ? ' ' + convertLessThanOneThousand(num % 1000) : '')
+        )
+      if (num < 1000000000)
+        return (
+          convertLessThanOneThousand(Math.floor(num / 1000000)) +
+          ' million' +
+          (num % 1000000 !== 0
+            ? ' ' +
+              convert(Math.floor(num / 1000) % 1000) +
+              ' thousand' +
+              (num % 1000 !== 0 ? ' ' + convertLessThanOneThousand(num % 1000) : '')
+            : '')
+        )
+
+      return ''
+    }
+
+    const dollars = Math.floor(amount)
+    const cents = Math.round((amount - dollars) * 100)
+
+    let result = convert(dollars) + ' dollar' + (dollars !== 1 ? 's' : '')
+
+    if (cents > 0) {
+      result += ' and ' + convert(cents) + ' cent' + (cents !== 1 ? 's' : '')
+    }
+
+    return result
+  }
+
   private static async generateQuotationHTML(data: QuotationData): Promise<string> {
     const html = `
       <!DOCTYPE html>
@@ -444,10 +524,9 @@ export class PDFGenerator {
 
         <div class="terms-section">
           <h3 class="heading">Payment Terms and Conditions</h3>
-          <p>- Payment is due by: ${this.formatDate(data.dueDate)}</p>
-          <p>- Payment method: Pre-paid</p>
-          <p>- TVA (11%) is included in the total amount</p>
-          <p>- Please include invoice number with payment</p>
+          <p>- Cash on Delivery</p>
+          <p>- TVA Syrafa Rate: $1 = 89,500 LBP</p>
+          <p>- Total Amount Due: ${this.numberToWords(data.totalDue)}</p>
         </div>
       </body>
       </html>

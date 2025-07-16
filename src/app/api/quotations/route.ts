@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
       page,
       depth: 1, // Include basic scope info
     })
+      
 
     return NextResponse.json(quotations)
   } catch (error) {

@@ -30,6 +30,13 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      actions: [
+        {
+          path: path.resolve(dirname, '/components/PDFGeneratorLink'),
+        },
+      ],
+    },
   },
   collections: [
     Scopes,

@@ -11,14 +11,25 @@ export const Users: CollectionConfig = {
   auth: true,
   fields: [
     {
-      name: 'firstName',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'lastName',
-      type: 'text',
-      required: true,
+      type: 'row',
+      fields: [
+        {
+          name: 'firstName',
+          type: 'text',
+          required: true,
+          admin: {
+            width: '50%',
+          },
+        },
+        {
+          name: 'lastName',
+          type: 'text',
+          required: true,
+          admin: {
+            width: '50%',
+          },
+        },
+      ],
     },
     {
       name: 'role',

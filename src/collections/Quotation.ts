@@ -78,17 +78,26 @@ export const Quotation: CollectionConfig = {
       required: true,
     },
     {
-      name: 'price',
-      type: 'number',
-      required: true,
-      admin: {
-        description: 'Total quotation price',
-      },
-    },
-    {
-      name: 'discount',
-      type: 'number',
-      defaultValue: 0,
+      type: 'row',
+      fields: [
+        {
+          name: 'price',
+          type: 'number',
+          required: true,
+          admin: {
+            width: '50%',
+            description: 'Total quotation price',
+          },
+        },
+        {
+          name: 'discount',
+          type: 'number',
+          defaultValue: 0,
+          admin: {
+            width: '50%',
+          },
+        },
+      ],
     },
     {
       name: 'quotationStatus',

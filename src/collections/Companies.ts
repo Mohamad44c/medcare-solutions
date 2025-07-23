@@ -27,6 +27,7 @@ export const Companies: CollectionConfig = {
     },
     {
       name: 'mofNumber',
+      label: 'MOF Number',
       type: 'text',
     },
   ],

@@ -23,6 +23,7 @@ export const Settings: GlobalConfig = {
     },
     {
       name: 'mofNumber',
+      label: 'MOF Number',
       type: 'text',
       required: true,
     },

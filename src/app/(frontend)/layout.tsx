@@ -1,6 +1,5 @@
 import React from 'react'
 import './globals.css'
-import Providers from './providers'
 
 export const metadata = {
   description: 'MCS',
@@ -13,9 +12,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Providers>
-          <main className="w-full">{children}</main>
-        </Providers>
+        <main className="w-full">{children}</main>
       </body>
     </html>
   )

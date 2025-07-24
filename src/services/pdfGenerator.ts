@@ -233,6 +233,10 @@ export class PDFGenerator {
             background-color: #f8f9fa;
             font-weight: bold;
           }
+          .problems-cell {
+            white-space: pre-line;
+            line-height: 1.4;
+          }
           .terms-section {
             margin-top: 30px;
             padding: 20px;
@@ -320,7 +324,7 @@ export class PDFGenerator {
           </thead>
           <tbody>
             <tr>
-              <td>${data.serviceType} - ${data.problems}</td>
+              <td class="problems-cell">${data.serviceType} - ${data.problems.replace(/\n/g, '<br>')}</td>
               <td>$${data.price.toFixed(2)}</td>
               <td>$${data.price.toFixed(2)}</td>
             </tr>
@@ -438,6 +442,10 @@ export class PDFGenerator {
           .total-row {
             background-color: #f8f9fa;
             font-weight: bold;
+          }
+          .problems-cell {
+            white-space: pre-line;
+            line-height: 1.4;
           }
           .terms-section {
             margin-top: 30px;

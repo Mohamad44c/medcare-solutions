@@ -3,27 +3,76 @@ import type { CollectionConfig } from 'payload'
 export const Inventory: CollectionConfig = {
   slug: 'inventory',
   admin: {
-    useAsTitle: 'name',
-    defaultColumns: ['name', 'part', 'quantity', 'reorderPoint', 'status'],
+    useAsTitle: 'partName',
+    defaultColumns: [
+      'partName',
+      'partNumber',
+      'partManufacturer',
+      'quantity',
+      'reorderPoint',
+      'status',
+    ],
     group: 'Inventory Management',
     description: 'Manage inventory items and track stock levels',
   },
   labels: {
-    singular: 'Inventory Item',
-    plural: 'Inventory Items',
+    singular: 'Part & Inventory Item',
+    plural: 'Parts & Inventory Items',
   },
 
   fields: [
     {
-      name: 'name',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'part',
-      type: 'relationship',
-      relationTo: 'part',
-      hasMany: true,
+      type: 'collapsible',
+      label: 'Part Information',
+      admin: {
+        initCollapsed: false,
+      },
+      fields: [
+        {
+          name: 'partName',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Name of the part',
+          },
+        },
+        {
+          name: 'partNumber',
+          type: 'text',
+          required: true,
+          admin: {
+            description: 'Unique part number',
+          },
+        },
+        {
+          name: 'length',
+          type: 'number',
+          admin: {
+            description: 'Length of the part (if applicable)',
+          },
+        },
+        {
+          name: 'diameter',
+          type: 'number',
+          admin: {
+            description: 'Diameter of the part (if applicable)',
+          },
+        },
+        {
+          name: 'country',
+          type: 'text',
+          admin: {
+            description: 'Country of origin',
+          },
+        },
+        {
+          name: 'partManufacturer',
+          type: 'text',
+          admin: {
+            description: 'Name of the manufacturer of this specific part',
+          },
+        },
+      ],
     },
     {
       name: 'scopeType',
@@ -134,7 +183,34 @@ export const Inventory: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ operation, data }: { operation: string; data: any }) => {
+      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+        // Validate unique part number
+        if (data.partNumber) {
+          const existingItem = await req.payload.find({
+            collection: 'inventory',
+            where: {
+              and: [
+                {
+                  partNumber: {
+                    equals: data.partNumber,
+                  },
+                },
+                {
+                  id: {
+                    not_equals: data.id,
+                  },
+                },
+              ],
+            },
+          })
+
+          if (existingItem.docs.length > 0) {
+            throw new Error(
+              `Part number "${data.partNumber}" already exists. Please use a unique part number.`,
+            )
+          }
+        }
+
         // Update status based on quantity
         if (data.quantity !== undefined) {
           if (data.quantity <= 0) {

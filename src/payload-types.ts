@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     scopes: Scope;
     inventory: Inventory;
-    part: Part;
     repairs: Repair;
     evaluation: Evaluation;
     quotation: Quotation;
@@ -87,7 +86,6 @@ export interface Config {
   collectionsSelect: {
     scopes: ScopesSelect<false> | ScopesSelect<true>;
     inventory: InventorySelect<false> | InventorySelect<true>;
-    part: PartSelect<false> | PartSelect<true>;
     repairs: RepairsSelect<false> | RepairsSelect<true>;
     evaluation: EvaluationSelect<false> | EvaluationSelect<true>;
     quotation: QuotationSelect<false> | QuotationSelect<true>;
@@ -257,8 +255,30 @@ export interface User {
  */
 export interface Inventory {
   id: number;
-  name: string;
-  part?: (number | Part)[] | null;
+  /**
+   * Name of the part
+   */
+  partName: string;
+  /**
+   * Unique part number
+   */
+  partNumber: string;
+  /**
+   * Length of the part (if applicable)
+   */
+  length?: number | null;
+  /**
+   * Diameter of the part (if applicable)
+   */
+  diameter?: number | null;
+  /**
+   * Country of origin
+   */
+  country?: string | null;
+  /**
+   * Name of the manufacturer of this specific part
+   */
+  partManufacturer?: string | null;
   scopeType: 'rigid' | 'flexible';
   /**
    * Current stock quantity
@@ -292,25 +312,6 @@ export interface Inventory {
   createdAt: string;
 }
 /**
- * Manage inventory items and track stock levels
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "part".
- */
-export interface Part {
-  id: number;
-  partName: string;
-  partNumber: string;
-  length?: number | null;
-  diameter?: number | null;
-  cost?: number | null;
-  price?: number | null;
-  manufacturer?: (number | null) | Manufacturer;
-  country?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -331,15 +332,13 @@ export interface Repair {
   status: 'pending' | 'done' | 'notDone';
   partsUsed?:
     | {
-        part: number | Part;
+        part: number | Inventory;
         quantityUsed: number;
         unitCost: number;
         totalCost?: number | null;
         id?: string | null;
       }[]
     | null;
-  laborCost?: number | null;
-  totalCost?: number | null;
   notes?: string | null;
   startDate?: string | null;
   completionDate?: string | null;
@@ -542,10 +541,6 @@ export interface PayloadLockedDocument {
         value: number | Inventory;
       } | null)
     | ({
-        relationTo: 'part';
-        value: number | Part;
-      } | null)
-    | ({
         relationTo: 'repairs';
         value: number | Repair;
       } | null)
@@ -648,8 +643,12 @@ export interface ScopesSelect<T extends boolean = true> {
  * via the `definition` "inventory_select".
  */
 export interface InventorySelect<T extends boolean = true> {
-  name?: T;
-  part?: T;
+  partName?: T;
+  partNumber?: T;
+  length?: T;
+  diameter?: T;
+  country?: T;
+  partManufacturer?: T;
   scopeType?: T;
   quantity?: T;
   reorderPoint?: T;
@@ -661,22 +660,6 @@ export interface InventorySelect<T extends boolean = true> {
   status?: T;
   lastUpdated?: T;
   notes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "part_select".
- */
-export interface PartSelect<T extends boolean = true> {
-  partName?: T;
-  partNumber?: T;
-  length?: T;
-  diameter?: T;
-  cost?: T;
-  price?: T;
-  manufacturer?: T;
-  country?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -699,8 +682,6 @@ export interface RepairsSelect<T extends boolean = true> {
         totalCost?: T;
         id?: T;
       };
-  laborCost?: T;
-  totalCost?: T;
   notes?: T;
   startDate?: T;
   completionDate?: T;

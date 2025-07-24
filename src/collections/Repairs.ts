@@ -131,7 +131,7 @@ export const Repairs: CollectionConfig = {
         {
           name: 'part',
           type: 'relationship',
-          relationTo: 'part',
+          relationTo: 'inventory',
           required: true,
         },
         {
@@ -154,18 +154,7 @@ export const Repairs: CollectionConfig = {
         },
       ],
     },
-    {
-      name: 'laborCost',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'totalCost',
-      type: 'number',
-      admin: {
-        readOnly: true,
-      },
-    },
+
     {
       name: 'notes',
       type: 'textarea',
@@ -241,15 +230,12 @@ export const Repairs: CollectionConfig = {
           data.createdBy = req.user?.id
         }
 
-        // Calculate total cost from parts and labor
+        // Calculate individual part costs
         if (data.partsUsed && Array.isArray(data.partsUsed)) {
-          const partsTotal = data.partsUsed.reduce((sum: number, part: any) => {
+          data.partsUsed.forEach((part: any) => {
             const partTotal = (part.quantityUsed || 0) * (part.unitCost || 0)
             part.totalCost = partTotal
-            return sum + partTotal
-          }, 0)
-
-          data.totalCost = partsTotal + (data.laborCost || 0)
+          })
         }
 
         return data

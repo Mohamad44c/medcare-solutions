@@ -15,7 +15,6 @@ import { Settings } from './globals/Settings'
 import { Manufacturers } from './collections/Manufacturers'
 import { Companies } from './collections/Companies'
 import { Inventory } from './collections/Inventory'
-import { Part } from './collections/Part'
 import { Repairs } from './collections/Repairs'
 import { Evaluation } from './collections/Evaluation'
 import { Quotation } from './collections/Quotation'
@@ -41,7 +40,6 @@ export default buildConfig({
   collections: [
     Scopes,
     Inventory,
-    Part,
     Repairs,
     Evaluation,
     Quotation,

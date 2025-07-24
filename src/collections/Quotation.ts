@@ -50,7 +50,9 @@ export const Quotation: CollectionConfig = {
               })
 
               if (evaluation && evaluation.scope !== data.scope) {
-                throw new Error('Selected evaluation does not belong to the selected scope')
+                throw new Error(
+                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,
+                )
               }
             }
             return value

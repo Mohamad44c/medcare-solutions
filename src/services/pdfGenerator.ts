@@ -243,18 +243,32 @@ export class PDFGenerator {
             margin-top: 0;
             color: #258bd1 !important;
           }
+          .whatsapp-logo {
+            width: 30px;
+            height: 30px;
+            margin-left: 10px;
+            object-fit: contain;
+          }
+          .whatsapp-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+          }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="company-info">
             <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
-            <div class="contact-info">
-              <div>Beirut Lebanon</div>
-              <div>+961 03 788345</div>
-              <div>+961 70 072401</div>
-              <div>info@mcs.com</div>
-            </div>
+              <div class="contact-info">
+                <div>Beirut Lebanon</div>
+                <div>+961 03 788345</div>
+                <div class="whatsapp-row">
+                  <span>+961 70 072401</span>
+                  <img src="data:image/png;base64,${await this.getWhatsappLogoBase64()}" alt="Whatsapp Logo" class="whatsapp-logo">
+                </div>
+                <div>info@mcs.com</div>
+              </div>
           </div>
           <div class="quotation-title">
             <h1 class="heading">QUOTATION</h1>
@@ -308,7 +322,6 @@ export class PDFGenerator {
             <tr>
               <td>${data.serviceType} - ${data.problems}</td>
               <td>$${data.price.toFixed(2)}</td>
-              <td>1</td>
               <td>$${data.price.toFixed(2)}</td>
             </tr>
             ${
@@ -317,14 +330,13 @@ export class PDFGenerator {
             <tr>
               <td>Discount</td>
               <td>-$${data.discount.toFixed(2)}</td>
-              <td>1</td>
               <td>-$${data.discount.toFixed(2)}</td>
             </tr>
             `
                 : ''
             }
             <tr class="total-row">
-              <td colspan="3"><strong>Total</strong></td>
+              <td colspan="2"><strong>Total</strong></td>
               <td><strong>$${(data.price - data.discount).toFixed(2)}</strong></td>
             </tr>
           </tbody>
@@ -437,6 +449,17 @@ export class PDFGenerator {
             margin-top: 0;
             color: #258bd1 !important;
           }
+          .whatsapp-logo {
+            width: 30px;
+            height: 30px;
+            margin-left: 10px;
+            object-fit: contain;
+          }
+          .whatsapp-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+          }
         </style>
       </head>
       <body>
@@ -445,7 +468,11 @@ export class PDFGenerator {
             <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
             <div class="contact-info">
               <div>Beirut Lebanon</div>
-              <div>+961 01 555133 | +961 03 788345</div>
+              <div>+961 03 788345</div>
+              <div class="whatsapp-row">
+                <span>+961 70 072401</span>
+                <img src="data:image/png;base64,${await this.getWhatsappLogoBase64()}" alt="Whatsapp Logo" class="whatsapp-logo">
+              </div>
               <div>info@mcs.com</div>
             </div>
           </div>
@@ -508,15 +535,15 @@ export class PDFGenerator {
               <td>$${data.totalPrice.toFixed(2)}</td>
             </tr>
             <tr class="total-row">
-              <td colspan="6"><strong>Subtotal</strong></td>
+              <td colspan="5"><strong>Subtotal</strong></td>
               <td><strong>$${data.totalPrice.toFixed(2)}</strong></td>
             </tr>
             <tr class="total-row">
-              <td colspan="6"><strong>TVA (11%)</strong></td>
+              <td colspan="5"><strong>TVA (11%)</strong></td>
               <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * 89500).toLocaleString()} LBP` : ''}</strong></td>
             </tr>
             <tr class="total-row">
-              <td colspan="6"><strong>Total Due</strong></td>
+              <td colspan="5"><strong>Total Due</strong></td>
               <td><strong>$${data.totalDue.toFixed(2)}</strong></td>
             </tr>
           </tbody>
@@ -538,6 +565,17 @@ export class PDFGenerator {
     try {
       const fs = await import('fs/promises')
       const logoPath = path.join(process.cwd(), 'public', 'assets', 'mcs-logo.png')
+      const logoBuffer = await fs.readFile(logoPath)
+      return logoBuffer.toString('base64')
+    } catch (error) {
+      console.warn('Could not load logo:', error)
+      return ''
+    }
+  }
+  private static async getWhatsappLogoBase64(): Promise<string> {
+    try {
+      const fs = await import('fs/promises')
+      const logoPath = path.join(process.cwd(), 'public', 'assets', 'whatsapp.png')
       const logoBuffer = await fs.readFile(logoPath)
       return logoBuffer.toString('base64')
     } catch (error) {

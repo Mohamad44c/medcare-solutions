@@ -43,10 +43,8 @@ export const Repairs: CollectionConfig = {
       type: 'select',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'In Progress', value: 'inProgress' },
-        { label: 'Completed', value: 'completed' },
-        { label: 'Shipped', value: 'shipped' },
-        { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Done', value: 'done' },
+        { label: 'Not Done', value: 'notDone' },
       ],
       defaultValue: 'pending',
       required: true,

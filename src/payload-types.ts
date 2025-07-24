@@ -153,7 +153,7 @@ export interface Scope {
   serialNumber: string;
   brand: number | Brand;
   manufacturer: number | Manufacturer;
-  status: 'pending' | 'evaluated' | 'approved' | 'denied' | 'completed';
+  status: 'pending' | 'approved' | 'denied';
   description?: {
     root: {
       type: string;
@@ -322,7 +322,7 @@ export interface Repair {
   scope: number | Scope;
   evaluation?: (number | null) | Evaluation;
   quotation?: (number | null) | Quotation;
-  status: 'pending' | 'inProgress' | 'completed' | 'shipped' | 'cancelled';
+  status: 'pending' | 'done' | 'notDone';
   partsUsed?:
     | {
         part: number | Part;
@@ -351,7 +351,14 @@ export interface Evaluation {
   id: number;
   evaluationNumber: string;
   scope: number | Scope;
-  status: 'pending' | 'inProgress' | 'completed';
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Current status of the evaluation
+   */
+  status: 'pending' | 'done' | 'notDone';
   evaluationDate?: string | null;
   problemsIdentified: string;
   recommendedActions?: string | null;
@@ -389,7 +396,7 @@ export interface Quotation {
    */
   price: number;
   discount?: number | null;
-  quotationStatus: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  quotationStatus: 'pending' | 'approved' | 'denied';
   notes?: string | null;
   createdBy?: (number | null) | User;
   /**
@@ -699,6 +706,7 @@ export interface RepairsSelect<T extends boolean = true> {
 export interface EvaluationSelect<T extends boolean = true> {
   evaluationNumber?: T;
   scope?: T;
+  scopeCode?: T;
   status?: T;
   evaluationDate?: T;
   problemsIdentified?: T;

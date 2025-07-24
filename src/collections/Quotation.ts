@@ -103,13 +103,11 @@ export const Quotation: CollectionConfig = {
       name: 'quotationStatus',
       type: 'select',
       options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Sent', value: 'sent' },
-        { label: 'Accepted', value: 'accepted' },
-        { label: 'Rejected', value: 'rejected' },
-        { label: 'Expired', value: 'expired' },
+        { label: 'Pending', value: 'pending' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Denied', value: 'denied' },
       ],
-      defaultValue: 'draft',
+      defaultValue: 'pending',
       required: true,
     },
     {

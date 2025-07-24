@@ -103,10 +103,8 @@ export const Scopes: CollectionConfig = {
           type: 'select',
           options: [
             { label: 'Pending', value: 'pending' },
-            { label: 'Evaluated', value: 'evaluated' },
             { label: 'Approved', value: 'approved' },
             { label: 'Denied', value: 'denied' },
-            { label: 'Completed', value: 'completed' },
           ],
           defaultValue: 'pending',
           required: true,

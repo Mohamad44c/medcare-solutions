@@ -49,7 +49,27 @@ export const Quotation: CollectionConfig = {
                 id: value,
               })
 
-              if (evaluation && evaluation.scope !== data.scope) {
+              // Handle both populated object and ID string cases
+              let evaluationScopeId = ''
+              if (evaluation?.scope) {
+                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
+                  evaluationScopeId = String(evaluation.scope.id)
+                } else {
+                  evaluationScopeId = String(evaluation.scope)
+                }
+              }
+              const selectedScopeId = String(data.scope || '')
+
+              console.log('Validation Debug:', {
+                evaluationScopeId,
+                selectedScopeId,
+                evaluation: evaluation?.evaluationNumber,
+                scope: data.scope,
+                evaluationScopeType: typeof evaluation?.scope,
+                evaluationScopeValue: evaluation?.scope,
+              })
+
+              if (evaluation && evaluationScopeId !== selectedScopeId) {
                 throw new Error(
                   `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,
                 )
@@ -146,32 +166,6 @@ export const Quotation: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       admin: {
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdf',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description:
-          'Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.',
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdfUrl',
-      type: 'text',
-      admin: {
-        description: 'S3 URL of the generated PDF',
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdfGeneratedAt',
-      type: 'date',
-      admin: {
-        description: 'Timestamp when PDF was last generated',
         readOnly: true,
       },
     },

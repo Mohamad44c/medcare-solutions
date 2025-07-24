@@ -46,7 +46,12 @@ export const Scopes: CollectionConfig = {
         },
         {
           name: 'company',
-          type: 'text',
+          type: 'relationship',
+          relationTo: 'companies',
+          required: true,
+          admin: {
+            description: 'Select the company that owns this scope',
+          },
         },
         {
           name: 'type',

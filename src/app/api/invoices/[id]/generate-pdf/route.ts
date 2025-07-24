@@ -68,36 +68,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
 
-    // Fetch company data if exists (scope.company is text, not relationship)
-    let company = null
-    if (scope.company) {
-      try {
-        console.log('Looking for company:', scope.company)
-
-        // Try to find company by name in the companies collection (case-insensitive)
-        const companiesResult = await payload.find({
-          collection: 'companies',
-          where: {
-            name: {
-              like: scope.company,
-            },
-          },
-          limit: 1,
-        })
-
-        console.log('Companies found:', companiesResult.docs.length)
-        console.log('Search query:', { name: { like: scope.company } })
-        if (companiesResult.docs.length > 0) {
-          company = companiesResult.docs[0]
-          console.log('Company data:', company)
-        } else {
-          console.log('No company found with name:', scope.company)
-        }
-      } catch (companyError) {
-        console.warn('Could not fetch company data:', companyError)
-        // Continue without company data
-      }
-    }
+    // Company data should be populated from the scope relationship
+    const company = scope.company
+    console.log('Company data from scope:', company)
 
     // Prepare data for PDF generation
     console.log('Preparing invoice PDF data...')
@@ -110,7 +83,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         modelNumber: scope.modelNumber,
         serialNumber: scope.serialNumber,
         company: {
-          name: scope.company || 'N/A',
+          name: company ? (company as any).name || 'N/A' : 'N/A',
           phone: company ? String((company as any).phoneNumber || 'N/A') : 'N/A',
           address: company ? (company as any).address || 'N/A' : 'N/A',
           mofNumber: company ? (company as any).mofNumber || 'N/A' : 'N/A',

@@ -145,7 +145,10 @@ export interface Scope {
   id: number;
   code?: string | null;
   name: string;
-  company?: string | null;
+  /**
+   * Select the company that owns this scope
+   */
+  company: number | Company;
   type: 'rigid' | 'flexible';
   modelNumber: string;
   serialNumber: string;
@@ -169,6 +172,22 @@ export interface Scope {
   } | null;
   receivedDate?: string | null;
   createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Manage companies and their details
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies".
+ */
+export interface Company {
+  id: number;
+  name: string;
+  phoneNumber?: number | null;
+  email?: string | null;
+  address?: string | null;
+  mofNumber?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -332,9 +351,15 @@ export interface Repair {
   status: 'pending' | 'done' | 'notDone';
   partsUsed?:
     | {
+        /**
+         * Select a part from inventory. Unit cost will be automatically populated.
+         */
         part: number | Inventory;
         quantityUsed: number;
-        unitCost: number;
+        /**
+         * Unit cost is automatically populated from the selected part
+         */
+        unitCost?: number | null;
         totalCost?: number | null;
         id?: string | null;
       }[]
@@ -407,42 +432,8 @@ export interface Quotation {
   quotationStatus: 'pending' | 'approved' | 'denied';
   notes?: string | null;
   createdBy?: (number | null) | User;
-  /**
-   * Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.
-   */
-  pdf?: (number | null) | Media;
-  /**
-   * S3 URL of the generated PDF
-   */
-  pdfUrl?: string | null;
-  /**
-   * Timestamp when PDF was last generated
-   */
-  pdfGeneratedAt?: string | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * Media files associated with scopes, repairs, and records.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
@@ -510,20 +501,26 @@ export interface Invoice {
   createdAt: string;
 }
 /**
- * Manage companies and their details
+ * Media files associated with scopes, repairs, and records.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "companies".
+ * via the `definition` "media".
  */
-export interface Company {
+export interface Media {
   id: number;
-  name: string;
-  phoneNumber?: number | null;
-  email?: string | null;
-  address?: string | null;
-  mofNumber?: string | null;
+  alt: string;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -726,9 +723,6 @@ export interface QuotationSelect<T extends boolean = true> {
   quotationStatus?: T;
   notes?: T;
   createdBy?: T;
-  pdf?: T;
-  pdfUrl?: T;
-  pdfGeneratedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

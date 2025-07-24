@@ -111,42 +111,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       console.error('Error listing companies:', listError)
     }
 
+    // Company data should be populated from the scope relationship
     if (scope.company) {
-      console.log('Scope has company reference:', scope.company)
-      const companyName = scope.company
-      console.log('Company name to search for:', companyName)
-
-      try {
-        // Search for company by name instead of ID (case-insensitive)
-        const companies = await payload.find({
-          collection: 'companies',
-          limit: 10,
-        })
-
-        // Find company by name (case-insensitive)
-        const company = companies.docs.find(
-          (c) =>
-            c.name.toLowerCase().includes(companyName.toLowerCase()) ||
-            companyName.toLowerCase().includes(c.name.toLowerCase()),
-        )
-
-        if (company) {
-          companyData = {
-            name: company.name || 'N/A',
-            phone: company.phoneNumber ? company.phoneNumber.toString() : 'N/A',
-            address: company.address || 'N/A',
-          }
-          console.log('Company fetched:', companyData.name)
-          console.log('Company phone:', companyData.phone)
-          console.log('Company address:', companyData.address)
-        } else {
-          console.log('No company found with name:', companyName)
-        }
-      } catch (companyError) {
-        console.warn('Could not fetch company:', companyError)
-        console.log('Using default company data')
-        // Continue with default company data
+      console.log('Company data from scope:', scope.company)
+      companyData = {
+        name: (scope.company as any).name || 'N/A',
+        phone: (scope.company as any).phoneNumber
+          ? String((scope.company as any).phoneNumber)
+          : 'N/A',
+        address: (scope.company as any).address || 'N/A',
       }
+      console.log('Company data prepared:', companyData)
     } else {
       console.log('No company reference found in scope')
     }

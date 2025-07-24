@@ -133,6 +133,9 @@ export const Repairs: CollectionConfig = {
           type: 'relationship',
           relationTo: 'inventory',
           required: true,
+          admin: {
+            description: 'Select a part from inventory. Unit cost will be automatically populated.',
+          },
         },
         {
           name: 'quantityUsed',
@@ -143,7 +146,10 @@ export const Repairs: CollectionConfig = {
         {
           name: 'unitCost',
           type: 'number',
-          required: true,
+          admin: {
+            readOnly: true,
+            description: 'Unit cost is automatically populated from the selected part',
+          },
         },
         {
           name: 'totalCost',
@@ -230,12 +236,31 @@ export const Repairs: CollectionConfig = {
           data.createdBy = req.user?.id
         }
 
-        // Calculate individual part costs
+        // Populate unit cost from selected parts and calculate totals
         if (data.partsUsed && Array.isArray(data.partsUsed)) {
-          data.partsUsed.forEach((part: any) => {
-            const partTotal = (part.quantityUsed || 0) * (part.unitCost || 0)
-            part.totalCost = partTotal
-          })
+          for (const partUsed of data.partsUsed) {
+            if (partUsed.part && !partUsed.unitCost) {
+              try {
+                // Fetch the part to get its unit cost
+                const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+                const part = await req.payload.findByID({
+                  collection: 'inventory',
+                  id: partId,
+                })
+
+                if (part) {
+                  partUsed.unitCost = (part as any).unitCost || 0
+                }
+              } catch (error) {
+                console.warn('Could not fetch part for unit cost:', error)
+                partUsed.unitCost = 0
+              }
+            }
+
+            // Calculate total cost for this part
+            const partTotal = (partUsed.quantityUsed || 0) * (partUsed.unitCost || 0)
+            partUsed.totalCost = partTotal
+          }
         }
 
         return data
@@ -249,22 +274,21 @@ export const Repairs: CollectionConfig = {
             for (const partUsed of doc.partsUsed) {
               if (partUsed.part && partUsed.quantityUsed) {
                 // Get current inventory for this part
-                const inventoryResult = await req.payload.find({
+                const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+                const inventoryResult = await req.payload.findByID({
                   collection: 'inventory',
-                  where: {
-                    part: {
-                      equals: partUsed.part,
-                    },
-                  },
+                  id: partId,
                 })
 
-                if (inventoryResult.docs.length > 0) {
-                  const inventory = inventoryResult.docs[0]
-                  const newQuantity = Math.max(0, (inventory.quantity || 0) - partUsed.quantityUsed)
+                if (inventoryResult) {
+                  const newQuantity = Math.max(
+                    0,
+                    (inventoryResult.quantity || 0) - partUsed.quantityUsed,
+                  )
 
                   await req.payload.update({
                     collection: 'inventory',
-                    id: inventory.id,
+                    id: partId,
                     data: {
                       quantity: newQuantity,
                     },

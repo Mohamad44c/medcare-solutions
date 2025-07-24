@@ -210,13 +210,13 @@ export const Invoices: CollectionConfig = {
           let nextNumber = 1
           if (result.docs.length > 0) {
             const lastNumber = result.docs[0].invoiceNumber
-            const match = lastNumber.match(/^INV(\d+)$/)
+            const match = lastNumber.match(/^SA1-(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.invoiceNumber = `INV${nextNumber.toString().padStart(4, '0')}`
+          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`
           data.createdBy = req.user?.id
         }
 

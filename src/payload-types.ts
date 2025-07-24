@@ -319,7 +319,13 @@ export interface Part {
 export interface Repair {
   id: number;
   repairNumber: string;
+  /**
+   * Only scopes with approved quotations are shown
+   */
   scope: number | Scope;
+  /**
+   * Only evaluations with scopes that have approved quotations are shown
+   */
   evaluation?: (number | null) | Evaluation;
   quotation?: (number | null) | Quotation;
   status: 'pending' | 'done' | 'notDone';
@@ -382,6 +388,9 @@ export interface Quotation {
   id: number;
   quotationNumber: string;
   scope: number | Scope;
+  /**
+   * Only evaluations related to the selected scope are shown
+   */
   evaluation?: (number | null) | Evaluation;
   quotationDate?: string | null;
   offerValidity?: string | null;

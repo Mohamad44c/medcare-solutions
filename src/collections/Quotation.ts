@@ -32,6 +32,31 @@ export const Quotation: CollectionConfig = {
       name: 'evaluation',
       type: 'relationship',
       relationTo: 'evaluation',
+      admin: {
+        description: 'Only evaluations related to the selected scope are shown',
+        condition: (data, siblingData) => {
+          // Only show evaluation field if a scope is selected
+          return !!siblingData?.scope
+        },
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req, data }) => {
+            // Validate that the evaluation belongs to the selected scope
+            if (value && data?.scope) {
+              const evaluation = await req.payload.findByID({
+                collection: 'evaluation',
+                id: value,
+              })
+
+              if (evaluation && evaluation.scope !== data.scope) {
+                throw new Error('Selected evaluation does not belong to the selected scope')
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'quotationDate',

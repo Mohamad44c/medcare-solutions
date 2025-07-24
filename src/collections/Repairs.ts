@@ -27,11 +27,86 @@ export const Repairs: CollectionConfig = {
       type: 'relationship',
       relationTo: 'scopes',
       required: true,
+      admin: {
+        description: 'Only scopes with approved quotations are shown',
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req }) => {
+            // Validate that the scope has an approved quotation
+            if (value) {
+              const quotationResult = await req.payload.find({
+                collection: 'quotation',
+                where: {
+                  and: [
+                    {
+                      scope: {
+                        equals: value,
+                      },
+                    },
+                    {
+                      quotationStatus: {
+                        equals: 'approved',
+                      },
+                    },
+                  ],
+                },
+              })
+
+              if (quotationResult.docs.length === 0) {
+                throw new Error('Selected scope does not have an approved quotation')
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'evaluation',
       type: 'relationship',
       relationTo: 'evaluation',
+      admin: {
+        description: 'Only evaluations with scopes that have approved quotations are shown',
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req }) => {
+            // Validate that the evaluation's scope has an approved quotation
+            if (value) {
+              const evaluation = await req.payload.findByID({
+                collection: 'evaluation',
+                id: value,
+              })
+
+              if (evaluation && evaluation.scope) {
+                const quotationResult = await req.payload.find({
+                  collection: 'quotation',
+                  where: {
+                    and: [
+                      {
+                        scope: {
+                          equals: evaluation.scope,
+                        },
+                      },
+                      {
+                        quotationStatus: {
+                          equals: 'approved',
+                        },
+                      },
+                    ],
+                  },
+                })
+
+                if (quotationResult.docs.length === 0) {
+                  throw new Error('Selected evaluation does not have an approved quotation')
+                }
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'quotation',

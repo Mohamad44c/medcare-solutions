@@ -39,6 +39,7 @@ interface InvoiceData {
       name: string
       phone?: string
       address?: string
+      mofNumber?: string
     }
     manufacturer?: {
       title: string
@@ -48,11 +49,11 @@ interface InvoiceData {
     serviceType: string
   }
   unitPrice: number
-  quantity: number
   totalPrice: number
   tax: number
   totalDue: number
   dueDate: string
+  showTVAInLBP: boolean
 }
 
 export class PDFGenerator {
@@ -250,7 +251,8 @@ export class PDFGenerator {
             <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
             <div class="contact-info">
               <div>Beirut Lebanon</div>
-              <div>+961 01 555133 | +961 03 788345</div>
+              <div>+961 03 788345</div>
+              <div>+961 70 072401</div>
               <div>info@mcs.com</div>
             </div>
           </div>
@@ -299,7 +301,6 @@ export class PDFGenerator {
             <tr>
               <th>Description</th>
               <th>Unit Price</th>
-              <th>Quantity</th>
               <th>Total Price</th>
             </tr>
           </thead>
@@ -461,7 +462,8 @@ export class PDFGenerator {
         <div class="client-info">
           <strong>To:</strong> ${data.scope.company.name}<br>
           <strong>Phone:</strong> ${data.scope.company.phone || 'N/A'}<br>
-          <strong>Location:</strong> ${data.scope.company.address || 'N/A'}
+          <strong>Location:</strong> ${data.scope.company.address || 'N/A'}<br>
+          <strong>MOF#:</strong> ${data.scope.company.mofNumber || 'N/A'}
         </div>
 
         <table>
@@ -493,7 +495,6 @@ export class PDFGenerator {
               <th>Model #</th>
               <th>Serial #</th>
               <th>Unit Price</th>
-              <th>Quantity</th>
               <th>Total Price</th>
             </tr>
           </thead>
@@ -504,7 +505,6 @@ export class PDFGenerator {
               <td>${data.scope.modelNumber}</td>
               <td>${data.scope.serialNumber}</td>
               <td>$${data.unitPrice.toFixed(2)}</td>
-              <td>${data.quantity}</td>
               <td>$${data.totalPrice.toFixed(2)}</td>
             </tr>
             <tr class="total-row">
@@ -513,7 +513,7 @@ export class PDFGenerator {
             </tr>
             <tr class="total-row">
               <td colspan="6"><strong>TVA (11%)</strong></td>
-              <td><strong>$${data.tax.toFixed(2)}</strong></td>
+              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * 89500).toLocaleString()} LBP` : ''}</strong></td>
             </tr>
             <tr class="total-row">
               <td colspan="6"><strong>Total Due</strong></td>
@@ -561,10 +561,10 @@ export class PDFGenerator {
       const pdf = await page.pdf({
         format: 'A4',
         margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
+          top: '15mm',
+          right: '15mm',
+          bottom: '15mm',
+          left: '15mm',
         },
         printBackground: true,
       })
@@ -590,10 +590,10 @@ export class PDFGenerator {
       const pdf = await page.pdf({
         format: 'A4',
         margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
+          top: '15mm',
+          right: '15mm',
+          bottom: '15mm',
+          left: '15mm',
         },
         printBackground: true,
       })

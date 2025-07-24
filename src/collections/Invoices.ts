@@ -114,6 +114,14 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
+      name: 'taxLebanese',
+      type: 'number',
+      admin: {
+        readOnly: true,
+        description: '11% of subtotal in LBP',
+      },
+    },
+    {
       name: 'totalDue',
       type: 'number',
       admin: {
@@ -125,6 +133,14 @@ export const Invoices: CollectionConfig = {
       name: 'paymentTerms',
       type: 'text',
       defaultValue: 'Net 30',
+    },
+    {
+      name: 'showTVAInLBP',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Show TVA amount in Lebanese Pounds (LBP) in addition to USD',
+      },
     },
     {
       name: 'notes',

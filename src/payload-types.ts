@@ -465,10 +465,18 @@ export interface Invoice {
    */
   tax?: number | null;
   /**
+   * 11% of subtotal in LBP
+   */
+  taxLebanese?: number | null;
+  /**
    * Subtotal + Tax
    */
   totalDue?: number | null;
   paymentTerms?: string | null;
+  /**
+   * Show TVA amount in Lebanese Pounds (LBP) in addition to USD
+   */
+  showTVAInLBP?: boolean | null;
   notes?: string | null;
   createdBy?: (number | null) | User;
   /**
@@ -743,8 +751,10 @@ export interface InvoicesSelect<T extends boolean = true> {
   totalPrice?: T;
   subtotal?: T;
   tax?: T;
+  taxLebanese?: T;
   totalDue?: T;
   paymentTerms?: T;
+  showTVAInLBP?: T;
   notes?: T;
   createdBy?: T;
   pdf?: T;

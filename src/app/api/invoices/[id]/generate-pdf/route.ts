@@ -113,6 +113,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           name: scope.company || 'N/A',
           phone: company ? String((company as any).phoneNumber || 'N/A') : 'N/A',
           address: company ? (company as any).address || 'N/A' : 'N/A',
+          mofNumber: company ? (company as any).mofNumber || 'N/A' : 'N/A',
         },
         manufacturer: manufacturer
           ? {
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       tax: invoice.tax || 0,
       totalDue: invoice.totalDue || 0,
       dueDate: invoice.dueDate || new Date().toISOString(),
+      showTVAInLBP: invoice.showTVAInLBP || false,
     }
 
     console.log('Invoice PDF data prepared:', pdfData)

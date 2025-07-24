@@ -336,12 +336,18 @@
 
       function setLoading(buttonId, loading) {
         const button = document.getElementById(buttonId)
-        const originalText = button.innerHTML
+        if (!button) return
 
         if (loading) {
+          // Store original text if not already stored
+          if (!button.dataset.originalText) {
+            button.dataset.originalText = button.innerHTML
+          }
           button.innerHTML = `<span class="loading"></span> Loading...`
           button.disabled = true
         } else {
+          // Restore original text
+          const originalText = button.dataset.originalText || button.innerHTML
           button.innerHTML = originalText
           button.disabled = false
         }
@@ -363,7 +369,9 @@
               : '/api/invoices?limit=20'
           showResult(`Loading ${currentDocumentType}s...`, 'info')
 
-          const response = await fetch(endpoint)
+          const response = await fetch(endpoint, {
+            signal: AbortSignal.timeout(10000), // 10 second timeout
+          })
           console.log('Response status:', response.status)
 
           if (response.ok) {

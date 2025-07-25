@@ -1,67 +1,106 @@
-# Payload Blank Template
+# MedCare Solutions - Medical Equipment Management System
 
-This template comes configured with the bare minimum to get started on anything you need.
+A comprehensive medical equipment management system built with modern web technologies, designed to streamline the workflow of medical equipment maintenance, repair, and inventory management.
 
-## Quick start
+## Overview
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+MedCare Solutions is a full-stack web application that helps medical facilities and service providers manage their medical equipment maintenance operations. The system handles everything from initial equipment registration to repair workflows, quotations, and invoicing.
 
-## Quick Start - local setup
+Key features include:
 
-To spin up this template locally, follow these steps:
+- Equipment scope management and tracking
+- Repair workflow management
+- Evaluation and quotation generation
+- Inventory tracking with reorder alerts
+- PDF generation for quotations and invoices
+- Company and manufacturer management
 
-### Clone
+## Technology Stack
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+### Frontend
 
-### Development
+- Next.js (App Router) - React framework
+- TypeScript - Type safety
+- TailwindCSS - Styling
+- shadcn/ui - UI components
+- Zustand - State management
+- TanStack Query - Data fetching
+- React Hook Form - Form handling
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URI` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+### Backend
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+- Payload CMS - Headless CMS and API
+- MongoDB - Database
+- Drizzle ORM - Database operations
+- Zod - Schema validation
+- Puppeteer - PDF generation
+- AWS S3 - File storage
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+## Collections Overview
 
-#### Docker (Optional)
+The system is built around the following core collections:
 
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
+### Operations Management
 
-To do so, follow these steps:
+- **Scopes**: Tracks medical equipment with details like serial numbers, model numbers, and equipment type (Rigid/Flexible)
+- **Repairs**: Manages repair workflows including parts used, labor costs, and repair status
+- **Evaluation**: Handles equipment evaluation process with problem identification and recommended actions
+- **Quotation**: Manages repair quotations with pricing and PDF generation capabilities
+- **Invoices**: Handles billing with detailed cost breakdown and PDF generation
 
-- Modify the `MONGODB_URI` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URI` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+### Inventory Management
 
-## How it works
+- **Inventory**: Tracks stock levels, reorder points, and pricing for parts and equipment
+- **Parts**: Manages individual parts with specifications and compatibility information
+- **Brands**: Tracks equipment and part manufacturers' brands
+- **Manufacturers**: Stores manufacturer details and contact information
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+### Business Entities
 
-### Collections
+- **Companies**: Manages client company information including contact details and MOF numbers
+- **Media**: Handles file uploads and media management
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+## Quick Start
 
-- #### Users (Authentication)
+### Local Development
 
-  Users are auth-enabled collections that have access to the admin panel.
+1. Clone the repository:
+   \`\`\`bash
+   git clone <repository-url>
+   cd medcare-solutions
+   \`\`\`
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+2. Copy environment variables:
+   \`\`\`bash
+   cp .env.example .env
+   \`\`\`
 
-- #### Media
+3. Install dependencies and start the development server:
+   \`\`\`bash
+   pnpm install
+   pnpm dev
+   \`\`\`
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+4. Open `http://localhost:3000` in your browser
 
-### Docker
+### Docker Setup (Optional)
 
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
+For development with Docker:
 
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
+1. Ensure Docker is installed on your system
+2. Update the MongoDB URI in your `.env` file:
+   \`\`\`
+   MONGODB_URI=mongodb://127.0.0.1/medcare-solutions
+   \`\`\`
+3. Start the containers:
+   \`\`\`bash
+   docker-compose up -d
+   \`\`\`
 
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
+## Documentation
+
+For detailed documentation on each collection and its fields, refer to the Payload CMS admin interface at `/admin`.
 
 ## Questions
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+If you have any questions or issues, please reach out to our support team or create an issue in the repository.

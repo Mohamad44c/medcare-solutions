@@ -67,9 +67,10 @@ export const Inventory: CollectionConfig = {
         },
         {
           name: 'partManufacturer',
-          type: 'text',
+          type: 'relationship',
+          relationTo: 'manufacturers',
           admin: {
-            description: 'Name of the manufacturer of this specific part',
+            description: 'Select the manufacturer of this specific part',
           },
         },
       ],
@@ -100,13 +101,6 @@ export const Inventory: CollectionConfig = {
       },
     },
     {
-      name: 'maxQuantity',
-      type: 'number',
-      admin: {
-        description: 'Maximum stock level',
-      },
-    },
-    {
       name: 'unitCost',
       type: 'number',
       admin: {
@@ -120,11 +114,7 @@ export const Inventory: CollectionConfig = {
         description: 'Selling price per unit',
       },
     },
-    {
-      name: 'manufacturer',
-      type: 'relationship',
-      relationTo: 'manufacturers',
-    },
+
     {
       name: 'location',
       type: 'text',

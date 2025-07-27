@@ -295,9 +295,9 @@ export interface Inventory {
    */
   country?: string | null;
   /**
-   * Name of the manufacturer of this specific part
+   * Select the manufacturer of this specific part
    */
-  partManufacturer?: string | null;
+  partManufacturer?: (number | null) | Manufacturer;
   scopeType: 'rigid' | 'flexible';
   /**
    * Current stock quantity
@@ -308,10 +308,6 @@ export interface Inventory {
    */
   reorderPoint?: number | null;
   /**
-   * Maximum stock level
-   */
-  maxQuantity?: number | null;
-  /**
    * Cost per unit
    */
   unitCost?: number | null;
@@ -319,7 +315,6 @@ export interface Inventory {
    * Selling price per unit
    */
   unitPrice?: number | null;
-  manufacturer?: (number | null) | Manufacturer;
   /**
    * Storage location
    */
@@ -392,6 +387,9 @@ export interface Evaluation {
   evaluationDate?: string | null;
   problemsIdentified: string;
   recommendedActions?: string | null;
+  /**
+   * Customer does not see this
+   */
   estimatedCost?: number | null;
   /**
    * Estimated repair duration in days
@@ -413,7 +411,7 @@ export interface Quotation {
   quotationNumber: string;
   scope: number | Scope;
   /**
-   * Only evaluations related to the selected scope are shown
+   * Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.
    */
   evaluation?: (number | null) | Evaluation;
   quotationDate?: string | null;
@@ -454,13 +452,6 @@ export interface Invoice {
    * Price per unit
    */
   unitPrice: number;
-  /**
-   * Quantity of units
-   */
-  quantity: number;
-  /**
-   * Unit price * Quantity
-   */
   totalPrice?: number | null;
   /**
    * Same as total price
@@ -649,10 +640,8 @@ export interface InventorySelect<T extends boolean = true> {
   scopeType?: T;
   quantity?: T;
   reorderPoint?: T;
-  maxQuantity?: T;
   unitCost?: T;
   unitPrice?: T;
-  manufacturer?: T;
   location?: T;
   status?: T;
   lastUpdated?: T;
@@ -739,7 +728,6 @@ export interface InvoicesSelect<T extends boolean = true> {
   dueDate?: T;
   status?: T;
   unitPrice?: T;
-  quantity?: T;
   totalPrice?: T;
   subtotal?: T;
   tax?: T;

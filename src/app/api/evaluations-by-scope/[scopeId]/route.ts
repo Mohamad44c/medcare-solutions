@@ -10,8 +10,19 @@ export async function GET(
     const { scopeId } = await params
     const payload = await getPayload({ config })
 
-    // Get evaluations for the specific scope
-    const evaluations = await payload.find({
+    // Get the scope with its evaluations
+    const scope = await payload.findByID({
+      collection: 'scopes',
+      id: scopeId,
+      depth: 1,
+    })
+
+    if (!scope) {
+      return NextResponse.json({ error: 'Scope not found' }, { status: 404 })
+    }
+
+    // Get evaluations for this scope
+    const evaluationsResult = await payload.find({
       collection: 'evaluation',
       where: {
         scope: {
@@ -20,10 +31,16 @@ export async function GET(
       },
       depth: 1,
     })
+    const evaluations = evaluationsResult.docs
 
     return NextResponse.json({
       success: true,
-      evaluations: evaluations.docs,
+      scope: {
+        id: scope.id,
+        code: scope.code,
+        name: scope.name,
+      },
+      evaluations: evaluations,
     })
   } catch (error) {
     console.error('Error fetching evaluations by scope:', error)

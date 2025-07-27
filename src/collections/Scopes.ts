@@ -129,6 +129,7 @@ export const Scopes: CollectionConfig = {
             },
           },
         },
+
         {
           name: 'createdBy',
           type: 'relationship',
@@ -210,8 +211,5 @@ export const Scopes: CollectionConfig = {
         return data
       },
     ],
-  },
-  lockDocuments: {
-    duration: 600, // Duration in seconds
   },
 }

@@ -9,9 +9,7 @@ export const Evaluation: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'evaluationNumber',
@@ -74,6 +72,9 @@ export const Evaluation: CollectionConfig = {
     {
       name: 'estimatedCost',
       type: 'number',
+      admin: {
+        description: 'Customer does not see this',
+      },
     },
     {
       name: 'estimatedDuration',
@@ -155,6 +156,7 @@ export const Evaluation: CollectionConfig = {
         return data
       },
     ],
+
     afterRead: [
       async ({ doc, req }: { doc: any; req: any }) => {
         // Populate scope code for display

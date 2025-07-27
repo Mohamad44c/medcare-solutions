@@ -18,7 +18,18 @@ export async function GET() {
     })
 
     // Extract unique scope IDs from approved quotations
-    const approvedScopeIds = [...new Set(approvedQuotations.docs.map((q) => q.scope))]
+    const approvedScopeIds = [
+      ...new Set(
+        approvedQuotations.docs
+          .map((q) => {
+            if (typeof q.scope === 'object' && q.scope.id) {
+              return q.scope.id
+            }
+            return q.scope
+          })
+          .filter((id) => id && typeof id === 'string'),
+      ),
+    ]
 
     // Get evaluations that have scopes with approved quotations
     const evaluations = await payload.find({

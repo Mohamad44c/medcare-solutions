@@ -9,9 +9,7 @@ export const Quotation: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'quotationNumber',
@@ -33,7 +31,8 @@ export const Quotation: CollectionConfig = {
       type: 'relationship',
       relationTo: 'evaluation',
       admin: {
-        description: 'Only evaluations related to the selected scope are shown',
+        description:
+          'Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.',
         condition: (data, siblingData) => {
           // Only show evaluation field if a scope is selected
           return !!siblingData?.scope

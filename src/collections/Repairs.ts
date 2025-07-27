@@ -9,9 +9,7 @@ export const Repairs: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'repairNumber',
@@ -34,7 +32,7 @@ export const Repairs: CollectionConfig = {
         beforeValidate: [
           async ({ value, req }) => {
             // Validate that the scope has an approved quotation
-            if (value) {
+            if (value && typeof value === 'string' && value.trim() !== '') {
               const quotationResult = await req.payload.find({
                 collection: 'quotation',
                 where: {
@@ -73,20 +71,26 @@ export const Repairs: CollectionConfig = {
         beforeValidate: [
           async ({ value, req }) => {
             // Validate that the evaluation's scope has an approved quotation
-            if (value) {
+            if (value && typeof value === 'string' && value.trim() !== '') {
               const evaluation = await req.payload.findByID({
                 collection: 'evaluation',
                 id: value,
               })
 
               if (evaluation && evaluation.scope) {
+                // Handle both populated object and ID string cases
+                let scopeId = evaluation.scope
+                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
+                  scopeId = evaluation.scope.id
+                }
+
                 const quotationResult = await req.payload.find({
                   collection: 'quotation',
                   where: {
                     and: [
                       {
                         scope: {
-                          equals: evaluation.scope,
+                          equals: scopeId,
                         },
                       },
                       {
@@ -239,10 +243,27 @@ export const Repairs: CollectionConfig = {
         // Populate unit cost from selected parts and calculate totals
         if (data.partsUsed && Array.isArray(data.partsUsed)) {
           for (const partUsed of data.partsUsed) {
-            if (partUsed.part && !partUsed.unitCost) {
-              try {
-                // Fetch the part to get its unit cost
-                const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+            // Skip if no part is selected or part is empty
+            if (
+              !partUsed.part ||
+              partUsed.part === '' ||
+              partUsed.part === null ||
+              partUsed.part === undefined
+            ) {
+              partUsed.unitCost = 0
+              partUsed.totalCost = 0
+              continue
+            }
+
+            try {
+              // Fetch the part to get its unit cost
+              const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+
+              // Validate part ID
+              if (!partId || typeof partId !== 'string' || partId.trim() === '') {
+                console.warn('Invalid part ID:', partId)
+                partUsed.unitCost = 0
+              } else {
                 const part = await req.payload.findByID({
                   collection: 'inventory',
                   id: partId,
@@ -250,11 +271,14 @@ export const Repairs: CollectionConfig = {
 
                 if (part) {
                   partUsed.unitCost = (part as any).unitCost || 0
+                } else {
+                  console.warn('Part not found with ID:', partId)
+                  partUsed.unitCost = 0
                 }
-              } catch (error) {
-                console.warn('Could not fetch part for unit cost:', error)
-                partUsed.unitCost = 0
               }
+            } catch (error) {
+              console.warn('Could not fetch part for unit cost:', error)
+              partUsed.unitCost = 0
             }
 
             // Calculate total cost for this part
@@ -273,26 +297,40 @@ export const Repairs: CollectionConfig = {
           if (doc.partsUsed && Array.isArray(doc.partsUsed)) {
             for (const partUsed of doc.partsUsed) {
               if (partUsed.part && partUsed.quantityUsed) {
-                // Get current inventory for this part
-                const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
-                const inventoryResult = await req.payload.findByID({
-                  collection: 'inventory',
-                  id: partId,
-                })
+                try {
+                  // Get current inventory for this part
+                  const partId =
+                    typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
 
-                if (inventoryResult) {
-                  const newQuantity = Math.max(
-                    0,
-                    (inventoryResult.quantity || 0) - partUsed.quantityUsed,
-                  )
+                  // Validate part ID
+                  if (!partId || typeof partId !== 'string' || partId.trim() === '') {
+                    console.warn('Invalid part ID for inventory update:', partId)
+                    continue
+                  }
 
-                  await req.payload.update({
+                  const inventoryResult = await req.payload.findByID({
                     collection: 'inventory',
                     id: partId,
-                    data: {
-                      quantity: newQuantity,
-                    },
                   })
+
+                  if (inventoryResult) {
+                    const newQuantity = Math.max(
+                      0,
+                      (inventoryResult.quantity || 0) - partUsed.quantityUsed,
+                    )
+
+                    await req.payload.update({
+                      collection: 'inventory',
+                      id: partId,
+                      data: {
+                        quantity: newQuantity,
+                      },
+                    })
+                  } else {
+                    console.warn('Inventory item not found for ID:', partId)
+                  }
+                } catch (error) {
+                  console.warn('Error updating inventory for part:', error)
                 }
               }
             }

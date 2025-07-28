@@ -305,10 +305,6 @@
             <span>📋</span>
             Load Documents
           </button>
-          <button onclick="testEndpoint()" id="testBtn">
-            <span>🔍</span>
-            Test Endpoint
-          </button>
           <button onclick="generatePDF()" id="generateBtn">
             <span>📄</span>
             Generate PDF
@@ -442,66 +438,6 @@
           )
         } finally {
           setLoading('loadBtn', false)
-        }
-      }
-
-      async function testEndpoint() {
-        setLoading('testBtn', true)
-
-        try {
-          const endpoint =
-            currentDocumentType === 'quotation' ? '/api/test-quotations' : '/api/test-invoices'
-          showResult(`Testing ${currentDocumentType}s endpoint...`, 'info')
-
-          const response = await fetch(endpoint)
-
-          if (response.ok) {
-            const data = await response.json()
-
-            if (
-              data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices'] &&
-              data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices'].length > 0
-            ) {
-              let html = `<h3>🔍 Test ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)}s (Raw Data):</h3>`
-              const docs = data[currentDocumentType === 'quotation' ? 'quotations' : 'invoices']
-              docs.forEach((doc) => {
-                const number =
-                  currentDocumentType === 'quotation' ? doc.quotation_number : doc.invoiceNumber
-                const created = new Date(doc.created).toLocaleDateString()
-                html += `
-                  <div class="quotation-item" onclick="selectDocument('${doc.id}', '${number}')">
-                    <div class="quotation-number">${number}</div>
-                    <div class="quotation-details">ID: ${doc.id} | Created: ${created}</div>
-                  </div>
-                `
-              })
-
-              document.getElementById('quotationsList').innerHTML = html
-              document.getElementById('quotationsList').style.display = 'block'
-              showResult(
-                `✅ Test successful! Found ${data.count} ${currentDocumentType}s.`,
-                'success',
-              )
-
-              // Update stats
-              if (currentDocumentType === 'quotation') {
-                document.getElementById('totalQuotations').textContent = data.count
-              } else {
-                document.getElementById('totalInvoices').textContent = data.count
-              }
-            } else {
-              showResult(`❌ No ${currentDocumentType}s found in test.`, 'error')
-            }
-          } else {
-            const errorText = await response.text()
-            console.error('Test error response:', errorText)
-            showResult(`❌ Test failed. Status: ${response.status}`, 'error')
-          }
-        } catch (error) {
-          console.error('Test error:', error)
-          showResult('❌ Test failed. Please check the console for details.', 'error')
-        } finally {
-          setLoading('testBtn', false)
         }
       }
 

@@ -100,7 +100,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           }
         : undefined,
       unitPrice: invoice.unitPrice || 0,
-      quantity: invoice.quantity || 0,
       totalPrice: invoice.totalPrice || 0,
       tax: invoice.tax || 0,
       totalDue: invoice.totalDue || 0,
@@ -108,11 +107,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       showTVAInLBP: invoice.showTVAInLBP || false,
     }
 
-    console.log('Invoice PDF data prepared:', pdfData)
+    // Fetch dollar rate from settings
+    let dollarRate = 89500 // Default fallback
+    try {
+      const settings = await payload.findGlobal({
+        slug: 'settings',
+      })
+      dollarRate = settings.dollarRate || 89500
+      console.log('Dollar rate from settings:', dollarRate)
+    } catch (settingsError) {
+      console.warn('Could not fetch dollar rate from settings, using default:', settingsError)
+    }
+
+    // Add dollar rate to PDF data
+    const pdfDataWithRate = {
+      ...pdfData,
+      dollarRate,
+    }
+
+    console.log('Invoice PDF data prepared:', pdfDataWithRate)
 
     // Generate PDF
     console.log('Generating invoice PDF...')
-    const pdfBuffer = await PDFGenerator.generateInvoicePDF(pdfData)
+    const pdfBuffer = await PDFGenerator.generateInvoicePDF(pdfDataWithRate)
     console.log('Invoice PDF generated, buffer size:', pdfBuffer.length)
 
     // Upload PDF to S3 (if S3 is configured)

@@ -175,20 +175,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         ? `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${fileName}`
         : `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`
 
-      // Update quotation with PDF URL
-      try {
-        await payload.update({
-          collection: 'quotation',
-          id,
-          data: {
-            pdfUrl: s3Url,
-            pdfGeneratedAt: new Date().toISOString(),
-          },
-        })
-        console.log('Quotation updated with PDF URL')
-      } catch (updateError) {
-        console.warn('Could not update quotation with PDF URL:', updateError)
-      }
+      // Note: pdfUrl and pdfGeneratedAt fields were removed from Quotation collection
+      // PDF URL is returned in the response instead
 
       console.log('Returning success response')
       return NextResponse.json({

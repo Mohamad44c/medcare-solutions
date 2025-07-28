@@ -54,6 +54,7 @@ interface InvoiceData {
   totalDue: number
   dueDate: string
   showTVAInLBP: boolean
+  dollarRate?: number
 }
 
 export class PDFGenerator {
@@ -548,7 +549,7 @@ export class PDFGenerator {
             </tr>
             <tr class="total-row">
               <td colspan="5"><strong>TVA (11%)</strong></td>
-              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * 89500).toLocaleString()} LBP` : ''}</strong></td>
+              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * (data.dollarRate || 89500)).toLocaleString()} LBP` : ''}</strong></td>
             </tr>
             <tr class="total-row">
               <td colspan="5"><strong>Total Due</strong></td>
@@ -560,7 +561,7 @@ export class PDFGenerator {
         <div class="terms-section">
           <h3 class="heading">Payment Terms and Conditions</h3>
           <p>- Cash on Delivery</p>
-          <p>- TVA Syrafa Rate: $1 = 89,500 LBP</p>
+          <p>- TVA Syrafa Rate: $1 = ${(data.dollarRate || 89500).toLocaleString()} LBP</p>
           <p>- Total Amount Due: ${this.numberToWords(data.totalDue)}</p>
         </div>
       </body>

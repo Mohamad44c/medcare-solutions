@@ -1,10 +1,18 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
+
+type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 export const Invoices: CollectionConfig = {
   slug: 'invoices',
   admin: {
     useAsTitle: 'invoiceNumber',
-    defaultColumns: ['invoiceNumber', 'scope', 'status', 'totalDue', 'createdAt'],
+    defaultColumns: [
+      'invoiceNumber',
+      'scope',
+      'status',
+      'totalDue',
+      'createdAt',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -127,7 +135,8 @@ export const Invoices: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Show TVA amount in Lebanese Pounds (LBP) in addition to USD',
+        description:
+          'Show TVA amount in Lebanese Pounds (LBP) in addition to USD',
       },
     },
     {
@@ -169,64 +178,123 @@ export const Invoices: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read invoices
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // Only admins can create invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     update: ({ req: { user } }) => {
       // Only admins can update invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Generate invoice number
         if (operation === 'create') {
           const result = await req.payload.find({
             collection: 'invoices',
             limit: 1,
             sort: '-invoiceNumber',
-          })
+          });
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].invoiceNumber
-            const match = lastNumber.match(/^SA1-(\d+)$/)
+            const lastNumber = result.docs[0].invoiceNumber;
+            const match = lastNumber.match(/^SA1-(\d+)$/);
             if (match) {
-              nextNumber = parseInt(match[1]) + 1
+              nextNumber = parseInt(match[1]) + 1;
             }
           }
 
-          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`
-          data.createdBy = req.user?.id
+          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`;
+          data.createdBy = req.user?.id;
         }
 
         // Calculate totals automatically
         if (data.unitPrice !== undefined) {
-          const unitPrice = parseFloat(data.unitPrice) || 0
+          const unitPrice = parseFloat(data.unitPrice) || 0;
 
           // Calculate total price (unit price × quantity)
-          data.totalPrice = unitPrice
+          data.totalPrice = unitPrice;
 
           // Subtotal is the same as total price
-          data.subtotal = data.totalPrice
+          data.subtotal = data.totalPrice;
 
           // Calculate tax (11% of subtotal)
-          data.tax = Math.round(data.subtotal * 0.11 * 100) / 100
+          data.tax = Math.round(data.subtotal * 0.11 * 100) / 100;
 
           // Calculate total due (subtotal + tax)
-          data.totalDue = data.subtotal + data.tax
+          data.totalDue = data.subtotal + data.tax;
         }
 
-        return data
+        return data;
+      },
+    ],
+    afterChange: [
+      async ({
+        req,
+        operation,
+        doc,
+        previousDoc,
+      }: {
+        req: any;
+        operation: string;
+        doc: any;
+        previousDoc: any;
+      }) => {
+        // Create notification for status change
+        if (
+          operation === 'update' &&
+          previousDoc &&
+          doc.status !== previousDoc.status
+        ) {
+          const statusMessages: Record<InvoiceStatus, string> = {
+            draft: 'Invoice has been saved as draft',
+            sent: 'Invoice has been sent to the client',
+            paid: 'Invoice has been marked as paid',
+            overdue: 'Invoice is now overdue',
+            cancelled: 'Invoice has been cancelled',
+          };
+
+          const statusTypes: Record<InvoiceStatus, string> = {
+            draft: 'info',
+            sent: 'info',
+            paid: 'success',
+            overdue: 'warning',
+            cancelled: 'error',
+          };
+
+          // Create notification for the invoice creator
+          if (doc.createdBy) {
+            await req.payload.create({
+              collection: 'notifications',
+              data: {
+                message: `${doc.invoiceNumber}: ${statusMessages[doc.status as InvoiceStatus]}`,
+                type: statusTypes[doc.status as InvoiceStatus],
+                user: doc.createdBy,
+                relatedCollection: 'invoices',
+                relatedDocument: doc.id,
+                read: false,
+              },
+            });
+          }
+        }
       },
     ],
   },
-}
+};

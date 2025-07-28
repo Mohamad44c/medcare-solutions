@@ -1,10 +1,18 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
+
+type QuotationStatus = 'pending' | 'approved' | 'denied';
 
 export const Quotation: CollectionConfig = {
   slug: 'quotation',
   admin: {
     useAsTitle: 'quotationNumber',
-    defaultColumns: ['quotationNumber', 'scope', 'quotationStatus', 'price', 'createdAt'],
+    defaultColumns: [
+      'quotationNumber',
+      'scope',
+      'quotationStatus',
+      'price',
+      'createdAt',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -35,7 +43,7 @@ export const Quotation: CollectionConfig = {
           'Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.',
         condition: (data, siblingData) => {
           // Only show evaluation field if a scope is selected
-          return !!siblingData?.scope
+          return !!siblingData?.scope;
         },
       },
       hooks: {
@@ -46,26 +54,29 @@ export const Quotation: CollectionConfig = {
               const evaluation = await req.payload.findByID({
                 collection: 'evaluation',
                 id: value,
-              })
+              });
 
               // Handle both populated object and ID string cases
-              let evaluationScopeId = ''
+              let evaluationScopeId = '';
               if (evaluation?.scope) {
-                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
-                  evaluationScopeId = String(evaluation.scope.id)
+                if (
+                  typeof evaluation.scope === 'object' &&
+                  evaluation.scope.id
+                ) {
+                  evaluationScopeId = String(evaluation.scope.id);
                 } else {
-                  evaluationScopeId = String(evaluation.scope)
+                  evaluationScopeId = String(evaluation.scope);
                 }
               }
-              const selectedScopeId = String(data.scope || '')
+              const selectedScopeId = String(data.scope || '');
 
               if (evaluation && evaluationScopeId !== selectedScopeId) {
                 throw new Error(
-                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,
-                )
+                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`
+                );
               }
             }
-            return value
+            return value;
           },
         ],
       },
@@ -163,47 +174,102 @@ export const Quotation: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read quotations
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // All authenticated users can create quotations
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     update: ({ req: { user } }) => {
       // Only admins can update quotations after creation
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete quotations
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Generate quotation number
         if (operation === 'create') {
           const result = await req.payload.find({
             collection: 'quotation',
             limit: 1,
             sort: '-quotationNumber',
-          })
+          });
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].quotationNumber
-            const match = lastNumber.match(/^Q(\d+)$/)
+            const lastNumber = result.docs[0].quotationNumber;
+            const match = lastNumber.match(/^Q(\d+)$/);
             if (match) {
-              nextNumber = parseInt(match[1]) + 1
+              nextNumber = parseInt(match[1]) + 1;
             }
           }
 
-          data.quotationNumber = `Q${nextNumber.toString().padStart(4, '0')}`
-          data.createdBy = req.user?.id
+          data.quotationNumber = `Q${nextNumber.toString().padStart(4, '0')}`;
+          data.createdBy = req.user?.id;
         }
 
-        return data
+        return data;
+      },
+    ],
+    afterChange: [
+      async ({
+        req,
+        operation,
+        doc,
+        previousDoc,
+      }: {
+        req: any;
+        operation: string;
+        doc: any;
+        previousDoc: any;
+      }) => {
+        // Create notification for status change
+        if (
+          operation === 'update' &&
+          previousDoc &&
+          doc.quotationStatus !== previousDoc.quotationStatus
+        ) {
+          const statusMessages: Record<QuotationStatus, string> = {
+            pending: 'Quotation is pending approval',
+            approved: 'Quotation has been approved',
+            denied: 'Quotation has been denied',
+          };
+
+          const statusTypes: Record<QuotationStatus, string> = {
+            pending: 'info',
+            approved: 'success',
+            denied: 'error',
+          };
+
+          // Create notification for the quotation creator
+          if (doc.createdBy) {
+            await req.payload.create({
+              collection: 'notifications',
+              data: {
+                message: `${doc.quotationNumber}: ${statusMessages[doc.quotationStatus as QuotationStatus]}`,
+                type: statusTypes[doc.quotationStatus as QuotationStatus],
+                user: doc.createdBy,
+                relatedCollection: 'quotation',
+                relatedDocument: doc.id,
+                read: false,
+              },
+            });
+          }
+        }
       },
     ],
   },
-}
+};

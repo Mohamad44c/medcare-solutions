@@ -9,9 +9,7 @@ export const Invoices: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'invoiceNumber',
@@ -81,20 +79,10 @@ export const Invoices: CollectionConfig = {
       },
     },
     {
-      name: 'quantity',
-      type: 'number',
-      required: true,
-      defaultValue: 1,
-      admin: {
-        description: 'Quantity of units',
-      },
-    },
-    {
       name: 'totalPrice',
       type: 'number',
       admin: {
         readOnly: true,
-        description: 'Unit price * Quantity',
       },
     },
     {
@@ -210,23 +198,22 @@ export const Invoices: CollectionConfig = {
           let nextNumber = 1
           if (result.docs.length > 0) {
             const lastNumber = result.docs[0].invoiceNumber
-            const match = lastNumber.match(/^INV(\d+)$/)
+            const match = lastNumber.match(/^SA1-(\d+)$/)
             if (match) {
               nextNumber = parseInt(match[1]) + 1
             }
           }
 
-          data.invoiceNumber = `INV${nextNumber.toString().padStart(4, '0')}`
+          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`
           data.createdBy = req.user?.id
         }
 
         // Calculate totals automatically
-        if (data.unitPrice !== undefined && data.quantity !== undefined) {
+        if (data.unitPrice !== undefined) {
           const unitPrice = parseFloat(data.unitPrice) || 0
-          const quantity = parseInt(data.quantity) || 0
 
           // Calculate total price (unit price × quantity)
-          data.totalPrice = unitPrice * quantity
+          data.totalPrice = unitPrice
 
           // Subtotal is the same as total price
           data.subtotal = data.totalPrice

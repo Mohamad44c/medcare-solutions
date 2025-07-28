@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import { PDFGenerator } from '../../../../../services/pdfGenerator'
-import config from '../../../../../payload.config'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { NextRequest, NextResponse } from 'next/server';
+import { getPayload } from 'payload';
+import { PDFGenerator } from '../../../../../services/pdfGenerator';
+import config from '../../../../../payload.config';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -13,146 +13,99 @@ const s3Client = new S3Client({
   },
   endpoint: process.env.S3_ENDPOINT,
   forcePathStyle: true,
-})
+});
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * Generate quotation PDF and upload to S3
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    console.log('Starting PDF generation...')
-
-    const payload = await getPayload({
-      config,
-    })
-
-    const { id } = await params
+    const payload = await getPayload({ config });
+    const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ message: 'Quotation ID is required' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Quotation ID is required',
+        },
+        { status: 400 }
+      );
     }
 
-    let quotation
-    try {
-      quotation = await payload.findByID({
-        collection: 'quotation',
-        id,
-        depth: 2,
-      })
-    } catch (findError) {
-      console.error('Error in findByID:', findError)
-      console.error('Find error details:', {
-        collection: 'quotation',
-        id,
-        errorMessage: findError instanceof Error ? findError.message : 'Unknown error',
-        errorStack: findError instanceof Error ? findError.stack : 'No stack trace',
-      })
-      throw findError
-    }
+    // Fetch quotation with related data
+    const quotation = await payload.findByID({
+      collection: 'quotation',
+      id,
+      depth: 2,
+    });
 
     if (!quotation) {
-      return NextResponse.json({ message: 'Quotation not found' }, { status: 404 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Quotation not found',
+        },
+        { status: 404 }
+      );
     }
 
     if (!quotation.scope) {
-      return NextResponse.json({ message: 'Quotation must have a scope' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Quotation must have a scope',
+        },
+        { status: 400 }
+      );
     }
 
     // Fetch scope details
-    console.log('Fetching scope...')
-    const scopeId = (quotation.scope as any)?.id || quotation.scope
+    const scopeId = (quotation.scope as any)?.id || quotation.scope;
     const scope = await payload.findByID({
       collection: 'scopes',
       id: scopeId,
       depth: 2,
-    })
-    console.log('Scope fetched:', scope?.name)
-    console.log('Full scope data:', JSON.stringify(scope, null, 2))
-    console.log('Scope.Company value:', scope?.company)
-    console.log('Scope.Company type:', typeof scope?.company)
+    });
+
+    if (!scope) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Related scope not found',
+        },
+        { status: 404 }
+      );
+    }
 
     // Fetch brand details if available
-    let brandData = null
+    let brandData = { title: 'N/A' };
     if (scope.brand) {
-      console.log('Fetching brand...')
-      const brandId = (scope.brand as any)?.id || scope.brand
       try {
+        const brandId = (scope.brand as any)?.id || scope.brand;
         const brand = await payload.findByID({
           collection: 'brands',
           id: brandId,
-        })
-        brandData = {
-          title: brand.title || 'N/A',
-        }
-        console.log('Brand fetched:', brandData.title)
-      } catch (brandError) {
-        console.warn('Could not fetch brand:', brandError)
-        brandData = { title: 'N/A' }
+        });
+        brandData = { title: brand.title || 'N/A' };
+      } catch (error) {
+        console.warn('Could not fetch brand:', error);
       }
-    } else {
-      console.log('No brand reference found in scope')
-      brandData = { title: 'N/A' }
     }
 
-    // Fetch company details
-    console.log('Fetching company...')
-    let companyData = { name: 'N/A', phone: 'N/A', address: 'N/A' }
-
-    // First, let's see what companies exist
-    console.log('Listing all companies to debug...')
-    try {
-      const allCompanies = await payload.find({
-        collection: 'companies',
-        limit: 10,
-        depth: 0,
-      })
-      console.log(
-        'All companies found:',
-        allCompanies.docs.map((c) => ({ id: c.id, name: c.name })),
-      )
-    } catch (listError) {
-      console.error('Error listing companies:', listError)
-    }
-
-    if (scope.company) {
-      console.log('Scope has company reference:', scope.company)
-      const companyName = scope.company
-      console.log('Company name to search for:', companyName)
-
-      try {
-        // Search for company by name instead of ID (case-insensitive)
-        const companies = await payload.find({
-          collection: 'companies',
-          limit: 10,
-        })
-
-        // Find company by name (case-insensitive)
-        const company = companies.docs.find(
-          (c) =>
-            c.name.toLowerCase().includes(companyName.toLowerCase()) ||
-            companyName.toLowerCase().includes(c.name.toLowerCase()),
-        )
-
-        if (company) {
-          companyData = {
-            name: company.name || 'N/A',
-            phone: company.phoneNumber ? company.phoneNumber.toString() : 'N/A',
-            address: company.address || 'N/A',
-          }
-          console.log('Company fetched:', companyData.name)
-          console.log('Company phone:', companyData.phone)
-          console.log('Company address:', companyData.address)
-        } else {
-          console.log('No company found with name:', companyName)
-        }
-      } catch (companyError) {
-        console.warn('Could not fetch company:', companyError)
-        console.log('Using default company data')
-        // Continue with default company data
-      }
-    } else {
-      console.log('No company reference found in scope')
-    }
+    // Prepare company data from scope relationship
+    const companyData = {
+      name: (scope.company as any)?.name || 'N/A',
+      phone: (scope.company as any)?.phoneNumber
+        ? String((scope.company as any).phoneNumber)
+        : 'N/A',
+      address: (scope.company as any)?.address || 'N/A',
+    };
 
     // Prepare data for PDF generation
-    console.log('Preparing PDF data...')
     const pdfData = {
       quotationNumber: quotation.quotationNumber,
       quotationDate: quotation.quotationDate || new Date().toISOString(),
@@ -171,17 +124,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       price: quotation.price,
       discount: quotation.discount || 0,
       notes: quotation.notes || '',
-    }
-    console.log('PDF data prepared:', pdfData)
+    };
 
     // Generate PDF
-    console.log('Generating PDF...')
-    const pdfBuffer = await PDFGenerator.generateQuotationPDF(pdfData)
-    console.log('PDF generated, buffer size:', pdfBuffer.length)
+    const pdfBuffer = await PDFGenerator.generateQuotationPDF(pdfData);
 
     // Upload PDF to S3
-    console.log('Uploading PDF to S3...')
-    const fileName = `quotations/quotation-${quotation.quotationNumber}-${Date.now()}.pdf`
+    const fileName = `quotations/quotation-${quotation.quotationNumber}-${Date.now()}.pdf`;
+    let s3Url = null;
 
     try {
       const uploadCommand = new PutObjectCommand({
@@ -190,63 +140,50 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         Body: pdfBuffer,
         ContentType: 'application/pdf',
         ContentDisposition: `attachment; filename="quotation-${quotation.quotationNumber}.pdf"`,
-      })
+      });
 
-      await s3Client.send(uploadCommand)
-      console.log('PDF uploaded to S3 successfully')
+      await s3Client.send(uploadCommand);
 
-      // Generate S3 URL
-      const s3Url = process.env.S3_ENDPOINT
+      s3Url = process.env.S3_ENDPOINT
         ? `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${fileName}`
-        : `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`
+        : `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${fileName}`;
 
-      // Update quotation with PDF URL
-      try {
-        await payload.update({
-          collection: 'quotation',
-          id,
-          data: {
-            pdfUrl: s3Url,
-            pdfGeneratedAt: new Date().toISOString(),
-          },
-        })
-        console.log('Quotation updated with PDF URL')
-      } catch (updateError) {
-        console.warn('Could not update quotation with PDF URL:', updateError)
-      }
+      console.log('PDF uploaded to S3 successfully');
+    } catch (s3Error) {
+      console.warn('S3 upload failed, will use data URL:', s3Error);
+    }
 
-      console.log('Returning success response')
+    // Return success response
+    if (s3Url) {
       return NextResponse.json({
         success: true,
         pdfUrl: s3Url,
         quotationNumber: quotation.quotationNumber,
         message: 'PDF generated and uploaded to S3 successfully',
-      })
-    } catch (s3Error) {
-      console.error('Error uploading to S3:', s3Error)
-
+      });
+    } else {
       // Fallback to base64 if S3 upload fails
-      const base64PDF = pdfBuffer.toString('base64')
-      const dataUrl = `data:application/pdf;base64,${base64PDF}`
+      const base64PDF = pdfBuffer.toString('base64');
+      const dataUrl = `data:application/pdf;base64,${base64PDF}`;
 
       return NextResponse.json({
         success: true,
         pdfUrl: dataUrl,
         quotationNumber: quotation.quotationNumber,
-        message: 'PDF generated successfully (S3 upload failed, using data URL)',
-      })
+        message:
+          'PDF generated successfully (S3 upload failed, using data URL)',
+      });
     }
   } catch (error) {
-    console.error('Error generating PDF:', error)
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Error generating quotation PDF:', error);
+
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to generate PDF',
         error: error instanceof Error ? error.message : 'Unknown error',
-        details: error instanceof Error ? error.stack : 'No stack trace',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

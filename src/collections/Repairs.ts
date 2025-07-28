@@ -9,9 +9,7 @@ export const Repairs: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'repairNumber',
@@ -27,11 +25,92 @@ export const Repairs: CollectionConfig = {
       type: 'relationship',
       relationTo: 'scopes',
       required: true,
+      admin: {
+        description: 'Only scopes with approved quotations are shown',
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req }) => {
+            // Validate that the scope has an approved quotation
+            if (value && typeof value === 'string' && value.trim() !== '') {
+              const quotationResult = await req.payload.find({
+                collection: 'quotation',
+                where: {
+                  and: [
+                    {
+                      scope: {
+                        equals: value,
+                      },
+                    },
+                    {
+                      quotationStatus: {
+                        equals: 'approved',
+                      },
+                    },
+                  ],
+                },
+              })
+
+              if (quotationResult.docs.length === 0) {
+                throw new Error('Selected scope does not have an approved quotation')
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'evaluation',
       type: 'relationship',
       relationTo: 'evaluation',
+      admin: {
+        description: 'Only evaluations with scopes that have approved quotations are shown',
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req }) => {
+            // Validate that the evaluation's scope has an approved quotation
+            if (value && typeof value === 'string' && value.trim() !== '') {
+              const evaluation = await req.payload.findByID({
+                collection: 'evaluation',
+                id: value,
+              })
+
+              if (evaluation && evaluation.scope) {
+                // Handle both populated object and ID string cases
+                let scopeId = evaluation.scope
+                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
+                  scopeId = evaluation.scope.id
+                }
+
+                const quotationResult = await req.payload.find({
+                  collection: 'quotation',
+                  where: {
+                    and: [
+                      {
+                        scope: {
+                          equals: scopeId,
+                        },
+                      },
+                      {
+                        quotationStatus: {
+                          equals: 'approved',
+                        },
+                      },
+                    ],
+                  },
+                })
+
+                if (quotationResult.docs.length === 0) {
+                  throw new Error('Selected evaluation does not have an approved quotation')
+                }
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'quotation',
@@ -43,10 +122,8 @@ export const Repairs: CollectionConfig = {
       type: 'select',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'In Progress', value: 'inProgress' },
-        { label: 'Completed', value: 'completed' },
-        { label: 'Shipped', value: 'shipped' },
-        { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Done', value: 'done' },
+        { label: 'Not Done', value: 'notDone' },
       ],
       defaultValue: 'pending',
       required: true,
@@ -58,8 +135,11 @@ export const Repairs: CollectionConfig = {
         {
           name: 'part',
           type: 'relationship',
-          relationTo: 'part',
+          relationTo: 'inventory',
           required: true,
+          admin: {
+            description: 'Select a part from inventory. Unit cost will be automatically populated.',
+          },
         },
         {
           name: 'quantityUsed',
@@ -70,7 +150,10 @@ export const Repairs: CollectionConfig = {
         {
           name: 'unitCost',
           type: 'number',
-          required: true,
+          admin: {
+            readOnly: true,
+            description: 'Unit cost is automatically populated from the selected part',
+          },
         },
         {
           name: 'totalCost',
@@ -81,18 +164,7 @@ export const Repairs: CollectionConfig = {
         },
       ],
     },
-    {
-      name: 'laborCost',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'totalCost',
-      type: 'number',
-      admin: {
-        readOnly: true,
-      },
-    },
+
     {
       name: 'notes',
       type: 'textarea',
@@ -168,15 +240,51 @@ export const Repairs: CollectionConfig = {
           data.createdBy = req.user?.id
         }
 
-        // Calculate total cost from parts and labor
+        // Populate unit cost from selected parts and calculate totals
         if (data.partsUsed && Array.isArray(data.partsUsed)) {
-          const partsTotal = data.partsUsed.reduce((sum: number, part: any) => {
-            const partTotal = (part.quantityUsed || 0) * (part.unitCost || 0)
-            part.totalCost = partTotal
-            return sum + partTotal
-          }, 0)
+          for (const partUsed of data.partsUsed) {
+            // Skip if no part is selected or part is empty
+            if (
+              !partUsed.part ||
+              partUsed.part === '' ||
+              partUsed.part === null ||
+              partUsed.part === undefined
+            ) {
+              partUsed.unitCost = 0
+              partUsed.totalCost = 0
+              continue
+            }
 
-          data.totalCost = partsTotal + (data.laborCost || 0)
+            try {
+              // Fetch the part to get its unit cost
+              const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+
+              // Validate part ID
+              if (!partId || typeof partId !== 'string' || partId.trim() === '') {
+                console.warn('Invalid part ID:', partId)
+                partUsed.unitCost = 0
+              } else {
+                const part = await req.payload.findByID({
+                  collection: 'inventory',
+                  id: partId,
+                })
+
+                if (part) {
+                  partUsed.unitCost = (part as any).unitCost || 0
+                } else {
+                  console.warn('Part not found with ID:', partId)
+                  partUsed.unitCost = 0
+                }
+              }
+            } catch (error) {
+              console.warn('Could not fetch part for unit cost:', error)
+              partUsed.unitCost = 0
+            }
+
+            // Calculate total cost for this part
+            const partTotal = (partUsed.quantityUsed || 0) * (partUsed.unitCost || 0)
+            partUsed.totalCost = partTotal
+          }
         }
 
         return data
@@ -189,27 +297,40 @@ export const Repairs: CollectionConfig = {
           if (doc.partsUsed && Array.isArray(doc.partsUsed)) {
             for (const partUsed of doc.partsUsed) {
               if (partUsed.part && partUsed.quantityUsed) {
-                // Get current inventory for this part
-                const inventoryResult = await req.payload.find({
-                  collection: 'inventory',
-                  where: {
-                    part: {
-                      equals: partUsed.part,
-                    },
-                  },
-                })
+                try {
+                  // Get current inventory for this part
+                  const partId =
+                    typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
 
-                if (inventoryResult.docs.length > 0) {
-                  const inventory = inventoryResult.docs[0]
-                  const newQuantity = Math.max(0, (inventory.quantity || 0) - partUsed.quantityUsed)
+                  // Validate part ID
+                  if (!partId || typeof partId !== 'string' || partId.trim() === '') {
+                    console.warn('Invalid part ID for inventory update:', partId)
+                    continue
+                  }
 
-                  await req.payload.update({
+                  const inventoryResult = await req.payload.findByID({
                     collection: 'inventory',
-                    id: inventory.id,
-                    data: {
-                      quantity: newQuantity,
-                    },
+                    id: partId,
                   })
+
+                  if (inventoryResult) {
+                    const newQuantity = Math.max(
+                      0,
+                      (inventoryResult.quantity || 0) - partUsed.quantityUsed,
+                    )
+
+                    await req.payload.update({
+                      collection: 'inventory',
+                      id: partId,
+                      data: {
+                        quantity: newQuantity,
+                      },
+                    })
+                  } else {
+                    console.warn('Inventory item not found for ID:', partId)
+                  }
+                } catch (error) {
+                  console.warn('Error updating inventory for part:', error)
                 }
               }
             }

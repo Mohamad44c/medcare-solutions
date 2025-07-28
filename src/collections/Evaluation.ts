@@ -4,14 +4,12 @@ export const Evaluation: CollectionConfig = {
   slug: 'evaluation',
   admin: {
     useAsTitle: 'evaluationNumber',
-    defaultColumns: ['evaluationNumber', 'scope', 'status', 'createdAt'],
+    defaultColumns: ['evaluationNumber', 'scope', 'scopeCode', 'status', 'createdAt'],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'evaluationNumber',
@@ -29,15 +27,27 @@ export const Evaluation: CollectionConfig = {
       required: true,
     },
     {
+      name: 'scopeCode',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Scope code (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'status',
       type: 'select',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'In Progress', value: 'inProgress' },
-        { label: 'Completed', value: 'completed' },
+        { label: 'Done', value: 'done' },
+        { label: 'Not Done', value: 'notDone' },
       ],
       defaultValue: 'pending',
       required: true,
+      admin: {
+        description: 'Current status of the evaluation',
+      },
     },
     {
       name: 'evaluationDate',
@@ -62,6 +72,9 @@ export const Evaluation: CollectionConfig = {
     {
       name: 'estimatedCost',
       type: 'number',
+      admin: {
+        description: 'Customer does not see this',
+      },
     },
     {
       name: 'estimatedDuration',
@@ -125,7 +138,42 @@ export const Evaluation: CollectionConfig = {
           data.evaluatedBy = req.user?.id
         }
 
+        // Populate scope code from scope relationship
+        if (data.scope) {
+          try {
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: data.scope,
+            })
+            if (scope && scope.code) {
+              data.scopeCode = scope.code
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope code:', error)
+          }
+        }
+
         return data
+      },
+    ],
+
+    afterRead: [
+      async ({ doc, req }: { doc: any; req: any }) => {
+        // Populate scope code for display
+        if (doc.scope && !doc.scopeCode) {
+          try {
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: doc.scope,
+            })
+            if (scope && scope.code) {
+              doc.scopeCode = scope.code
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope code for display:', error)
+          }
+        }
+        return doc
       },
     ],
   },

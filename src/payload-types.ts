@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     scopes: Scope;
     inventory: Inventory;
-    part: Part;
     repairs: Repair;
     evaluation: Evaluation;
     quotation: Quotation;
@@ -87,7 +86,6 @@ export interface Config {
   collectionsSelect: {
     scopes: ScopesSelect<false> | ScopesSelect<true>;
     inventory: InventorySelect<false> | InventorySelect<true>;
-    part: PartSelect<false> | PartSelect<true>;
     repairs: RepairsSelect<false> | RepairsSelect<true>;
     evaluation: EvaluationSelect<false> | EvaluationSelect<true>;
     quotation: QuotationSelect<false> | QuotationSelect<true>;
@@ -147,13 +145,16 @@ export interface Scope {
   id: number;
   code?: string | null;
   name: string;
-  company?: string | null;
+  /**
+   * Select the company that owns this scope
+   */
+  company: number | Company;
   type: 'rigid' | 'flexible';
   modelNumber: string;
   serialNumber: string;
   brand: number | Brand;
   manufacturer: number | Manufacturer;
-  status: 'pending' | 'evaluated' | 'approved' | 'denied' | 'completed';
+  status: 'pending' | 'approved' | 'denied';
   description?: {
     root: {
       type: string;
@@ -171,6 +172,22 @@ export interface Scope {
   } | null;
   receivedDate?: string | null;
   createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Manage companies and their details
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "companies".
+ */
+export interface Company {
+  id: number;
+  name: string;
+  phoneNumber?: number | null;
+  email?: string | null;
+  address?: string | null;
+  mofNumber?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -257,8 +274,30 @@ export interface User {
  */
 export interface Inventory {
   id: number;
-  name: string;
-  part?: (number | Part)[] | null;
+  /**
+   * Name of the part
+   */
+  partName: string;
+  /**
+   * Unique part number
+   */
+  partNumber: string;
+  /**
+   * Length of the part (if applicable)
+   */
+  length?: number | null;
+  /**
+   * Diameter of the part (if applicable)
+   */
+  diameter?: number | null;
+  /**
+   * Country of origin
+   */
+  country?: string | null;
+  /**
+   * Select the manufacturer of this specific part
+   */
+  partManufacturer?: (number | null) | Manufacturer;
   scopeType: 'rigid' | 'flexible';
   /**
    * Current stock quantity
@@ -269,10 +308,6 @@ export interface Inventory {
    */
   reorderPoint?: number | null;
   /**
-   * Maximum stock level
-   */
-  maxQuantity?: number | null;
-  /**
    * Cost per unit
    */
   unitCost?: number | null;
@@ -280,7 +315,6 @@ export interface Inventory {
    * Selling price per unit
    */
   unitPrice?: number | null;
-  manufacturer?: (number | null) | Manufacturer;
   /**
    * Storage location
    */
@@ -288,25 +322,6 @@ export interface Inventory {
   status?: ('inStock' | 'lowStock' | 'outOfStock' | 'discontinued') | null;
   lastUpdated?: string | null;
   notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Manage inventory items and track stock levels
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "part".
- */
-export interface Part {
-  id: number;
-  partName: string;
-  partNumber: string;
-  length?: number | null;
-  diameter?: number | null;
-  cost?: number | null;
-  price?: number | null;
-  manufacturer?: (number | null) | Manufacturer;
-  country?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -319,21 +334,31 @@ export interface Part {
 export interface Repair {
   id: number;
   repairNumber: string;
+  /**
+   * Only scopes with approved quotations are shown
+   */
   scope: number | Scope;
+  /**
+   * Only evaluations with scopes that have approved quotations are shown
+   */
   evaluation?: (number | null) | Evaluation;
   quotation?: (number | null) | Quotation;
-  status: 'pending' | 'inProgress' | 'completed' | 'shipped' | 'cancelled';
+  status: 'pending' | 'done' | 'notDone';
   partsUsed?:
     | {
-        part: number | Part;
+        /**
+         * Select a part from inventory. Unit cost will be automatically populated.
+         */
+        part: number | Inventory;
         quantityUsed: number;
-        unitCost: number;
+        /**
+         * Unit cost is automatically populated from the selected part
+         */
+        unitCost?: number | null;
         totalCost?: number | null;
         id?: string | null;
       }[]
     | null;
-  laborCost?: number | null;
-  totalCost?: number | null;
   notes?: string | null;
   startDate?: string | null;
   completionDate?: string | null;
@@ -351,10 +376,20 @@ export interface Evaluation {
   id: number;
   evaluationNumber: string;
   scope: number | Scope;
-  status: 'pending' | 'inProgress' | 'completed';
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Current status of the evaluation
+   */
+  status: 'pending' | 'done' | 'notDone';
   evaluationDate?: string | null;
   problemsIdentified: string;
   recommendedActions?: string | null;
+  /**
+   * Customer does not see this
+   */
   estimatedCost?: number | null;
   /**
    * Estimated repair duration in days
@@ -375,6 +410,9 @@ export interface Quotation {
   id: number;
   quotationNumber: string;
   scope: number | Scope;
+  /**
+   * Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.
+   */
   evaluation?: (number | null) | Evaluation;
   quotationDate?: string | null;
   offerValidity?: string | null;
@@ -389,45 +427,11 @@ export interface Quotation {
    */
   price: number;
   discount?: number | null;
-  quotationStatus: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  quotationStatus: 'pending' | 'approved' | 'denied';
   notes?: string | null;
   createdBy?: (number | null) | User;
-  /**
-   * Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.
-   */
-  pdf?: (number | null) | Media;
-  /**
-   * S3 URL of the generated PDF
-   */
-  pdfUrl?: string | null;
-  /**
-   * Timestamp when PDF was last generated
-   */
-  pdfGeneratedAt?: string | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * Media files associated with scopes, repairs, and records.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  prefix?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * Core workflow stages involved in handling service requests, from initial scoping to final invoicing.
@@ -448,13 +452,6 @@ export interface Invoice {
    * Price per unit
    */
   unitPrice: number;
-  /**
-   * Quantity of units
-   */
-  quantity: number;
-  /**
-   * Unit price * Quantity
-   */
   totalPrice?: number | null;
   /**
    * Same as total price
@@ -495,20 +492,26 @@ export interface Invoice {
   createdAt: string;
 }
 /**
- * Manage companies and their details
+ * Media files associated with scopes, repairs, and records.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "companies".
+ * via the `definition` "media".
  */
-export interface Company {
+export interface Media {
   id: number;
-  name: string;
-  phoneNumber?: number | null;
-  email?: string | null;
-  address?: string | null;
-  mofNumber?: string | null;
+  alt: string;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -524,10 +527,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'inventory';
         value: number | Inventory;
-      } | null)
-    | ({
-        relationTo: 'part';
-        value: number | Part;
       } | null)
     | ({
         relationTo: 'repairs';
@@ -632,35 +631,21 @@ export interface ScopesSelect<T extends boolean = true> {
  * via the `definition` "inventory_select".
  */
 export interface InventorySelect<T extends boolean = true> {
-  name?: T;
-  part?: T;
-  scopeType?: T;
-  quantity?: T;
-  reorderPoint?: T;
-  maxQuantity?: T;
-  unitCost?: T;
-  unitPrice?: T;
-  manufacturer?: T;
-  location?: T;
-  status?: T;
-  lastUpdated?: T;
-  notes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "part_select".
- */
-export interface PartSelect<T extends boolean = true> {
   partName?: T;
   partNumber?: T;
   length?: T;
   diameter?: T;
-  cost?: T;
-  price?: T;
-  manufacturer?: T;
   country?: T;
+  partManufacturer?: T;
+  scopeType?: T;
+  quantity?: T;
+  reorderPoint?: T;
+  unitCost?: T;
+  unitPrice?: T;
+  location?: T;
+  status?: T;
+  lastUpdated?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -683,8 +668,6 @@ export interface RepairsSelect<T extends boolean = true> {
         totalCost?: T;
         id?: T;
       };
-  laborCost?: T;
-  totalCost?: T;
   notes?: T;
   startDate?: T;
   completionDate?: T;
@@ -699,6 +682,7 @@ export interface RepairsSelect<T extends boolean = true> {
 export interface EvaluationSelect<T extends boolean = true> {
   evaluationNumber?: T;
   scope?: T;
+  scopeCode?: T;
   status?: T;
   evaluationDate?: T;
   problemsIdentified?: T;
@@ -728,9 +712,6 @@ export interface QuotationSelect<T extends boolean = true> {
   quotationStatus?: T;
   notes?: T;
   createdBy?: T;
-  pdf?: T;
-  pdfUrl?: T;
-  pdfGeneratedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -747,7 +728,6 @@ export interface InvoicesSelect<T extends boolean = true> {
   dueDate?: T;
   status?: T;
   unitPrice?: T;
-  quantity?: T;
   totalPrice?: T;
   subtotal?: T;
   tax?: T;

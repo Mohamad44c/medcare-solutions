@@ -9,9 +9,7 @@ export const Quotation: CollectionConfig = {
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
   },
-  lockDocuments: {
-    duration: 600, // 10 minutes
-  },
+
   fields: [
     {
       name: 'quotationNumber',
@@ -32,6 +30,45 @@ export const Quotation: CollectionConfig = {
       name: 'evaluation',
       type: 'relationship',
       relationTo: 'evaluation',
+      admin: {
+        description:
+          'Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.',
+        condition: (data, siblingData) => {
+          // Only show evaluation field if a scope is selected
+          return !!siblingData?.scope
+        },
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, req, data }) => {
+            // Validate that the evaluation belongs to the selected scope
+            if (value && data?.scope) {
+              const evaluation = await req.payload.findByID({
+                collection: 'evaluation',
+                id: value,
+              })
+
+              // Handle both populated object and ID string cases
+              let evaluationScopeId = ''
+              if (evaluation?.scope) {
+                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
+                  evaluationScopeId = String(evaluation.scope.id)
+                } else {
+                  evaluationScopeId = String(evaluation.scope)
+                }
+              }
+              const selectedScopeId = String(data.scope || '')
+
+              if (evaluation && evaluationScopeId !== selectedScopeId) {
+                throw new Error(
+                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,
+                )
+              }
+            }
+            return value
+          },
+        ],
+      },
     },
     {
       name: 'quotationDate',
@@ -103,13 +140,11 @@ export const Quotation: CollectionConfig = {
       name: 'quotationStatus',
       type: 'select',
       options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Sent', value: 'sent' },
-        { label: 'Accepted', value: 'accepted' },
-        { label: 'Rejected', value: 'rejected' },
-        { label: 'Expired', value: 'expired' },
+        { label: 'Pending', value: 'pending' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Denied', value: 'denied' },
       ],
-      defaultValue: 'draft',
+      defaultValue: 'pending',
       required: true,
     },
     {
@@ -121,32 +156,6 @@ export const Quotation: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       admin: {
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdf',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description:
-          'Generated quotation PDF. Use the API endpoint /api/quotations/{id}/generate-pdf to generate and download the PDF.',
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdfUrl',
-      type: 'text',
-      admin: {
-        description: 'S3 URL of the generated PDF',
-        readOnly: true,
-      },
-    },
-    {
-      name: 'pdfGeneratedAt',
-      type: 'date',
-      admin: {
-        description: 'Timestamp when PDF was last generated',
         readOnly: true,
       },
     },

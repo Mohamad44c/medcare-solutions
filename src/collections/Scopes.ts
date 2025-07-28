@@ -46,7 +46,12 @@ export const Scopes: CollectionConfig = {
         },
         {
           name: 'company',
-          type: 'text',
+          type: 'relationship',
+          relationTo: 'companies',
+          required: true,
+          admin: {
+            description: 'Select the company that owns this scope',
+          },
         },
         {
           name: 'type',
@@ -103,10 +108,8 @@ export const Scopes: CollectionConfig = {
           type: 'select',
           options: [
             { label: 'Pending', value: 'pending' },
-            { label: 'Evaluated', value: 'evaluated' },
             { label: 'Approved', value: 'approved' },
             { label: 'Denied', value: 'denied' },
-            { label: 'Completed', value: 'completed' },
           ],
           defaultValue: 'pending',
           required: true,
@@ -126,6 +129,7 @@ export const Scopes: CollectionConfig = {
             },
           },
         },
+
         {
           name: 'createdBy',
           type: 'relationship',
@@ -207,8 +211,5 @@ export const Scopes: CollectionConfig = {
         return data
       },
     ],
-  },
-  lockDocuments: {
-    duration: 600, // Duration in seconds
   },
 }

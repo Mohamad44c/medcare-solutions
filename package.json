@@ -11,8 +11,14 @@
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "lint:fix": "cross-env NODE_OPTIONS=--no-deprecation next lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "clean": "rm -rf .next && rm -rf node_modules && pnpm install",
+    "type-check": "tsc --noEmit",
+    "validate": "pnpm lint && pnpm format:check && pnpm type-check"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.840.0",

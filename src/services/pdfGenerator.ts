@@ -1,79 +1,113 @@
-import puppeteer from 'puppeteer'
-import path from 'path'
+import puppeteer from 'puppeteer';
+import path from 'path';
 
+// Types
 interface QuotationData {
-  quotationNumber: string
-  quotationDate: string
-  offerValidity: string
+  quotationNumber: string;
+  quotationDate: string;
+  offerValidity: string;
   scope: {
-    name: string
-    modelNumber: string
-    serialNumber: string
-    receivedDate: string
+    name: string;
+    modelNumber: string;
+    serialNumber: string;
+    receivedDate: string;
     brand?: {
-      title: string
-    }
+      title: string;
+    };
     company: {
-      name: string
-      phone?: string
-      address?: string
-    }
-  }
-  deliveryPeriod: number
-  problems: string
-  serviceType: string
-  price: number
-  discount: number
-  notes?: string
+      name: string;
+      phone?: string;
+      address?: string;
+    };
+  };
+  deliveryPeriod: number;
+  problems: string;
+  serviceType: string;
+  price: number;
+  discount: number;
+  notes?: string;
 }
 
 interface InvoiceData {
-  invoiceNumber: string
-  invoiceDate: string
-  mofNumber: string
+  invoiceNumber: string;
+  invoiceDate: string;
+  mofNumber: string;
   scope: {
-    name: string
-    modelNumber: string
-    serialNumber: string
+    name: string;
+    modelNumber: string;
+    serialNumber: string;
     company: {
-      name: string
-      phone?: string
-      address?: string
-      mofNumber?: string
-    }
+      name: string;
+      phone?: string;
+      address?: string;
+      mofNumber?: string;
+    };
     manufacturer?: {
-      title: string
-    }
-  }
+      title: string;
+    };
+  };
   quotation?: {
-    serviceType: string
-  }
-  unitPrice: number
-  totalPrice: number
-  tax: number
-  totalDue: number
-  dueDate: string
-  showTVAInLBP: boolean
-  dollarRate?: number
+    serviceType: string;
+  };
+  unitPrice: number;
+  totalPrice: number;
+  tax: number;
+  totalDue: number;
+  dueDate: string;
+  showTVAInLBP: boolean;
+  dollarRate?: number;
 }
 
+// Constants
+const DEFAULT_DOLLAR_RATE = 89500;
+const DEFAULT_LOGO_PATH = path.join(
+  process.cwd(),
+  'public',
+  'assets',
+  'mcs-logo.png'
+);
+const DEFAULT_WHATSAPP_LOGO_PATH = path.join(
+  process.cwd(),
+  'public',
+  'assets',
+  'whatsapp.png'
+);
+
 export class PDFGenerator {
+  /**
+   * Format date string to readable format
+   */
   private static formatDate(dateString: string): string {
-    if (!dateString) return 'N/A'
+    if (!dateString) return 'N/A';
+
     try {
-      const date = new Date(dateString)
+      const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-      })
+      });
     } catch {
-      return 'N/A'
+      return 'N/A';
     }
   }
 
+  /**
+   * Convert number to words (for currency amounts)
+   */
   private static numberToWords(amount: number): string {
-    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
+    const ones = [
+      '',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+    ];
     const teens = [
       'ten',
       'eleven',
@@ -85,7 +119,7 @@ export class PDFGenerator {
       'seventeen',
       'eighteen',
       'nineteen',
-    ]
+    ];
     const tens = [
       '',
       '',
@@ -97,35 +131,42 @@ export class PDFGenerator {
       'seventy',
       'eighty',
       'ninety',
-    ]
+    ];
 
     const convertLessThanOneThousand = (num: number): string => {
-      if (num === 0) return ''
+      if (num === 0) return '';
 
-      if (num < 10) return ones[num]
-      if (num < 20) return teens[num - 10]
-      if (num < 100)
-        return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '')
-      if (num < 1000)
+      if (num < 10) return ones[num];
+      if (num < 20) return teens[num - 10];
+      if (num < 100) {
+        return (
+          tens[Math.floor(num / 10)] +
+          (num % 10 !== 0 ? ' ' + ones[num % 10] : '')
+        );
+      }
+      if (num < 1000) {
         return (
           ones[Math.floor(num / 100)] +
           ' hundred' +
-          (num % 100 !== 0 ? ' and ' + convertLessThanOneThousand(num % 100) : '')
-        )
-
-      return ''
-    }
+          (num % 100 !== 0
+            ? ' and ' + convertLessThanOneThousand(num % 100)
+            : '')
+        );
+      }
+      return '';
+    };
 
     const convert = (num: number): string => {
-      if (num === 0) return 'zero'
-      if (num < 1000) return convertLessThanOneThousand(num)
-      if (num < 1000000)
+      if (num === 0) return 'zero';
+      if (num < 1000) return convertLessThanOneThousand(num);
+      if (num < 1000000) {
         return (
           convertLessThanOneThousand(Math.floor(num / 1000)) +
           ' thousand' +
           (num % 1000 !== 0 ? ' ' + convertLessThanOneThousand(num % 1000) : '')
-        )
-      if (num < 1000000000)
+        );
+      }
+      if (num < 1000000000) {
         return (
           convertLessThanOneThousand(Math.floor(num / 1000000)) +
           ' million' +
@@ -133,27 +174,65 @@ export class PDFGenerator {
             ? ' ' +
               convert(Math.floor(num / 1000) % 1000) +
               ' thousand' +
-              (num % 1000 !== 0 ? ' ' + convertLessThanOneThousand(num % 1000) : '')
+              (num % 1000 !== 0
+                ? ' ' + convertLessThanOneThousand(num % 1000)
+                : '')
             : '')
-        )
+        );
+      }
+      return '';
+    };
 
-      return ''
-    }
+    const dollars = Math.floor(amount);
+    const cents = Math.round((amount - dollars) * 100);
 
-    const dollars = Math.floor(amount)
-    const cents = Math.round((amount - dollars) * 100)
-
-    let result = convert(dollars) + ' dollar' + (dollars !== 1 ? 's' : '')
+    let result = convert(dollars) + ' dollar' + (dollars !== 1 ? 's' : '');
 
     if (cents > 0) {
-      result += ' and ' + convert(cents) + ' cent' + (cents !== 1 ? 's' : '')
+      result += ' and ' + convert(cents) + ' cent' + (cents !== 1 ? 's' : '');
     }
 
-    return result
+    return result;
   }
 
-  private static async generateQuotationHTML(data: QuotationData): Promise<string> {
-    const html = `
+  /**
+   * Load image file and convert to base64
+   */
+  private static async loadImageAsBase64(filePath: string): Promise<string> {
+    try {
+      const fs = await import('fs/promises');
+      const buffer = await fs.readFile(filePath);
+      return buffer.toString('base64');
+    } catch (error) {
+      console.warn(`Could not load image from ${filePath}:`, error);
+      return '';
+    }
+  }
+
+  /**
+   * Get company logo as base64
+   */
+  private static async getLogoBase64(): Promise<string> {
+    return this.loadImageAsBase64(DEFAULT_LOGO_PATH);
+  }
+
+  /**
+   * Get WhatsApp logo as base64
+   */
+  private static async getWhatsappLogoBase64(): Promise<string> {
+    return this.loadImageAsBase64(DEFAULT_WHATSAPP_LOGO_PATH);
+  }
+
+  /**
+   * Generate quotation HTML template
+   */
+  private static async generateQuotationHTML(
+    data: QuotationData
+  ): Promise<string> {
+    const logoBase64 = await this.getLogoBase64();
+    const whatsappLogoBase64 = await this.getWhatsappLogoBase64();
+
+    return `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -264,16 +343,16 @@ export class PDFGenerator {
       <body>
         <div class="header">
           <div class="company-info">
-            <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
-              <div class="contact-info">
-                <div>Beirut Lebanon</div>
-                <div>+961 03 788345</div>
-                <div class="whatsapp-row">
-                  <span>+961 70 072401</span>
-                  <img src="data:image/png;base64,${await this.getWhatsappLogoBase64()}" alt="Whatsapp Logo" class="whatsapp-logo">
-                </div>
-                <div>info@mcs.com</div>
+            <img src="data:image/png;base64,${logoBase64}" alt="MCS Logo" class="logo">
+            <div class="contact-info">
+              <div>Beirut Lebanon</div>
+              <div>+961 03 788345</div>
+              <div class="whatsapp-row">
+                <span>+961 70 072401</span>
+                <img src="data:image/png;base64,${whatsappLogoBase64}" alt="Whatsapp Logo" class="whatsapp-logo">
               </div>
+              <div>info@mcs.com</div>
+            </div>
           </div>
           <div class="quotation-title">
             <h1 class="heading">QUOTATION</h1>
@@ -358,12 +437,18 @@ export class PDFGenerator {
         </div>
       </body>
       </html>
-    `
-    return html
+    `;
   }
 
+  /**
+   * Generate invoice HTML template
+   */
   private static async generateInvoiceHTML(data: InvoiceData): Promise<string> {
-    const html = `
+    const logoBase64 = await this.getLogoBase64();
+    const whatsappLogoBase64 = await this.getWhatsappLogoBase64();
+    const dollarRate = data.dollarRate || DEFAULT_DOLLAR_RATE;
+
+    return `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -474,13 +559,13 @@ export class PDFGenerator {
       <body>
         <div class="header">
           <div class="company-info">
-            <img src="data:image/png;base64,${await this.getLogoBase64()}" alt="MCS Logo" class="logo">
+            <img src="data:image/png;base64,${logoBase64}" alt="MCS Logo" class="logo">
             <div class="contact-info">
               <div>Beirut Lebanon</div>
               <div>+961 03 788345</div>
               <div class="whatsapp-row">
                 <span>+961 70 072401</span>
-                <img src="data:image/png;base64,${await this.getWhatsappLogoBase64()}" alt="Whatsapp Logo" class="whatsapp-logo">
+                <img src="data:image/png;base64,${whatsappLogoBase64}" alt="Whatsapp Logo" class="whatsapp-logo">
               </div>
               <div>info@mcs.com</div>
             </div>
@@ -549,7 +634,7 @@ export class PDFGenerator {
             </tr>
             <tr class="total-row">
               <td colspan="5"><strong>TVA (11%)</strong></td>
-              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * (data.dollarRate || 89500)).toLocaleString()} LBP` : ''}</strong></td>
+              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * dollarRate).toLocaleString()} LBP` : ''}</strong></td>
             </tr>
             <tr class="total-row">
               <td colspan="5"><strong>Total Due</strong></td>
@@ -561,49 +646,26 @@ export class PDFGenerator {
         <div class="terms-section">
           <h3 class="heading">Payment Terms and Conditions</h3>
           <p>- Cash on Delivery</p>
-          <p>- TVA Syrafa Rate: $1 = ${(data.dollarRate || 89500).toLocaleString()} LBP</p>
+          <p>- TVA Syrafa Rate: $1 = ${dollarRate.toLocaleString()} LBP</p>
           <p>- Total Amount Due: ${this.numberToWords(data.totalDue)}</p>
         </div>
       </body>
       </html>
-    `
-    return html
+    `;
   }
 
-  private static async getLogoBase64(): Promise<string> {
-    try {
-      const fs = await import('fs/promises')
-      const logoPath = path.join(process.cwd(), 'public', 'assets', 'mcs-logo.png')
-      const logoBuffer = await fs.readFile(logoPath)
-      return logoBuffer.toString('base64')
-    } catch (error) {
-      console.warn('Could not load logo:', error)
-      return ''
-    }
-  }
-  private static async getWhatsappLogoBase64(): Promise<string> {
-    try {
-      const fs = await import('fs/promises')
-      const logoPath = path.join(process.cwd(), 'public', 'assets', 'whatsapp.png')
-      const logoBuffer = await fs.readFile(logoPath)
-      return logoBuffer.toString('base64')
-    } catch (error) {
-      console.warn('Could not load logo:', error)
-      return ''
-    }
-  }
-
-  public static async generateQuotationPDF(data: QuotationData): Promise<Buffer> {
+  /**
+   * Generate PDF from HTML using Puppeteer
+   */
+  private static async generatePDFFromHTML(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
+    });
 
     try {
-      const page = await browser.newPage()
-      const html = await this.generateQuotationHTML(data)
-
-      await page.setContent(html, { waitUntil: 'networkidle0' })
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
 
       const pdf = await page.pdf({
         format: 'A4',
@@ -614,40 +676,29 @@ export class PDFGenerator {
           left: '15mm',
         },
         printBackground: true,
-      })
+      });
 
-      return Buffer.from(pdf)
+      return Buffer.from(pdf);
     } finally {
-      await browser.close()
+      await browser.close();
     }
   }
 
+  /**
+   * Generate quotation PDF
+   */
+  public static async generateQuotationPDF(
+    data: QuotationData
+  ): Promise<Buffer> {
+    const html = await this.generateQuotationHTML(data);
+    return this.generatePDFFromHTML(html);
+  }
+
+  /**
+   * Generate invoice PDF
+   */
   public static async generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
-
-    try {
-      const page = await browser.newPage()
-      const html = await this.generateInvoiceHTML(data)
-
-      await page.setContent(html, { waitUntil: 'networkidle0' })
-
-      const pdf = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '15mm',
-          right: '15mm',
-          bottom: '15mm',
-          left: '15mm',
-        },
-        printBackground: true,
-      })
-
-      return Buffer.from(pdf)
-    } finally {
-      await browser.close()
-    }
+    const html = await this.generateInvoiceHTML(data);
+    return this.generatePDFFromHTML(html);
   }
 }

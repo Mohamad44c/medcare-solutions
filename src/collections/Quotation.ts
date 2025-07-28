@@ -59,15 +59,6 @@ export const Quotation: CollectionConfig = {
               }
               const selectedScopeId = String(data.scope || '')
 
-              console.log('Validation Debug:', {
-                evaluationScopeId,
-                selectedScopeId,
-                evaluation: evaluation?.evaluationNumber,
-                scope: data.scope,
-                evaluationScopeType: typeof evaluation?.scope,
-                evaluationScopeValue: evaluation?.scope,
-              })
-
               if (evaluation && evaluationScopeId !== selectedScopeId) {
                 throw new Error(
                   `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,

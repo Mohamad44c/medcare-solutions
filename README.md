@@ -1,67 +1,268 @@
-# Payload Blank Template
+# MedCare Solutions - Production Ready
 
-This template comes configured with the bare minimum to get started on anything you need.
+A comprehensive medical equipment management system built with Next.js, Payload CMS, and PostgreSQL.
 
-## Quick start
+## 🚀 Features
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+- **Inventory Management**: Track medical equipment, parts, and stock levels
+- **Service Workflow**: Complete workflow from evaluation to invoicing
+- **PDF Generation**: Automated quotation and invoice PDF generation
+- **User Management**: Role-based access control
+- **Data Integrity**: Robust validation and error handling
+- **Production Ready**: Optimized for deployment and scalability
 
-## Quick Start - local setup
+## 🛠 Tech Stack
 
-To spin up this template locally, follow these steps:
+- **Framework**: Next.js 15+ with App Router
+- **CMS**: Payload CMS
+- **Database**: PostgreSQL (Neon DB)
+- **Authentication**: Payload Auth
+- **PDF Generation**: Puppeteer
+- **File Storage**: AWS S3
+- **Styling**: Tailwind CSS + Shadcn UI
+- **Language**: TypeScript
 
-### Clone
+## 📋 Prerequisites
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+- Node.js 18+
+- PostgreSQL database
+- AWS S3 bucket (optional, for file storage)
+- pnpm package manager
 
-### Development
+## 🔧 Environment Variables
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URI` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+Create a `.env.local` file with the following variables:
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+```env
+# Database
+DATABASE_URL=your_postgresql_connection_string
+DATABASE_URL_UNPOOLED=your_postgresql_unpooled_connection_string
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+# Payload CMS
+PAYLOAD_SECRET=your_payload_secret_key
 
-#### Docker (Optional)
+# S3 Storage (Optional)
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=your_s3_access_key
+S3_SECRET_ACCESS_KEY=your_s3_secret_key
+S3_BUCKET=your_s3_bucket_name
+S3_ENDPOINT=your_s3_endpoint
 
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
+# Alternative AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_S3_BUCKET=your_s3_bucket_name
 
-To do so, follow these steps:
+# Application
+NODE_ENV=production
+NEXT_PUBLIC_SERVER_URL=your_domain_url
+```
 
-- Modify the `MONGODB_URI` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URI` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+## 🚀 Installation
 
-## How it works
+1. **Clone the repository**
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+   ```bash
+   git clone <repository-url>
+   cd medcare-solutions
+   ```
 
-### Collections
+2. **Install dependencies**
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+   ```bash
+   pnpm install
+   ```
 
-- #### Users (Authentication)
+3. **Set up environment variables**
 
-  Users are auth-enabled collections that have access to the admin panel.
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+4. **Build the application**
 
-- #### Media
+   ```bash
+   pnpm build
+   ```
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+5. **Start the application**
+   ```bash
+   pnpm start
+   ```
 
-### Docker
+## 📁 Project Structure
 
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── (frontend)/        # Frontend pages
+│   └── (payload)/         # Payload CMS admin
+├── collections/           # Payload CMS collections
+├── components/            # React components
+├── globals/              # Global configurations
+├── hooks/                # Custom React hooks
+├── lib/                  # Utilities and helpers
+├── services/             # Business logic services
+└── payload.config.ts     # Payload CMS configuration
+```
 
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
+## 🔐 Authentication & Authorization
 
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
+The system uses Payload CMS's built-in authentication with role-based access:
 
-## Questions
+- **Admin**: Full access to all features
+- **User**: Limited access based on permissions
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+## 📊 Data Models
+
+### Core Collections
+
+- **Scopes**: Service requests and equipment details
+- **Evaluations**: Equipment assessments and diagnostics
+- **Quotations**: Service proposals and pricing
+- **Invoices**: Billing and payment tracking
+- **Inventory**: Parts and equipment stock management
+- **Companies**: Client and manufacturer information
+- **Users**: System users and administrators
+
+### Relationships
+
+- Scopes → Companies (Many-to-One)
+- Evaluations → Scopes (Many-to-One)
+- Quotations → Scopes, Evaluations (Many-to-One)
+- Invoices → Scopes, Quotations (Many-to-One)
+- Inventory → Manufacturers (Many-to-One)
+
+## 🔄 Workflow
+
+1. **Scope Creation**: Create service request with equipment details
+2. **Evaluation**: Assess equipment and identify issues
+3. **Quotation**: Generate service proposal with pricing
+4. **Approval**: Client approves quotation
+5. **Repair**: Perform service and track parts used
+6. **Invoicing**: Generate invoice and track payment
+
+## 📄 PDF Generation
+
+The system automatically generates professional PDFs for:
+
+- **Quotations**: Service proposals with pricing
+- **Invoices**: Billing documents with tax calculations
+
+### Features
+
+- Dynamic content from database
+- Professional styling and branding
+- Multi-currency support (USD/LBP)
+- Automatic file storage in S3
+- Fallback to data URLs
+
+## 🚀 Deployment
+
+### Vercel Deployment
+
+1. **Connect repository to Vercel**
+2. **Set environment variables in Vercel dashboard**
+3. **Deploy automatically on push to main branch**
+
+### Docker Deployment
+
+```bash
+# Build Docker image
+docker build -t medcare-solutions .
+
+# Run container
+docker run -p 3000:3000 --env-file .env.local medcare-solutions
+```
+
+### Environment-Specific Configurations
+
+- **Development**: Full debugging, local database
+- **Staging**: Production-like environment for testing
+- **Production**: Optimized for performance and security
+
+## 🔧 Development
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm start        # Start production server
+
+# Database
+pnpm db:reset     # Reset database schema
+pnpm db:migrate   # Run database migrations
+
+# Linting & Formatting
+pnpm lint         # Run ESLint
+pnpm format       # Format code with Prettier
+```
+
+### Code Quality
+
+- **TypeScript**: Strict type checking
+- **ESLint**: Code linting and best practices
+- **Prettier**: Code formatting
+- **Error Handling**: Centralized error management
+- **Validation**: Input validation and sanitization
+
+## 🛡 Security
+
+- **Input Validation**: All user inputs are validated
+- **SQL Injection Protection**: Parameterized queries
+- **XSS Protection**: Content sanitization
+- **CSRF Protection**: Built-in Next.js protection
+- **Authentication**: Secure session management
+- **Authorization**: Role-based access control
+
+## 📈 Performance
+
+- **Code Splitting**: Automatic Next.js optimization
+- **Image Optimization**: Next.js Image component
+- **Database Indexing**: Optimized queries
+- **Caching**: Strategic caching implementation
+- **CDN**: Static asset delivery
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection**: Verify DATABASE_URL is correct
+2. **S3 Upload Failures**: Check AWS credentials and permissions
+3. **PDF Generation**: Ensure Puppeteer dependencies are installed
+4. **Build Errors**: Clear .next folder and reinstall dependencies
+
+### Logs
+
+- **Application Logs**: Check console output
+- **Database Logs**: Monitor PostgreSQL logs
+- **S3 Logs**: Check AWS CloudWatch logs
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+## 🆘 Support
+
+For support and questions:
+
+- **Email**: support@mcs.com
+- **Phone**: +961 03 788345
+- **WhatsApp**: +961 70 072401
+
+---
+
+**MedCare Solutions** - Professional medical equipment management system

@@ -2,16 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-type Notification = {
-  id: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
-  createdAt: string;
-  relatedCollection?: string;
-  relatedDocument?: string;
-};
+import payload from 'payload';
+import type { Notification } from '../payload-types';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -19,15 +11,19 @@ export const useNotifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications');
-      const data = await response.json();
-      setNotifications(data.docs);
+      const response = await payload.find({
+        collection: 'notifications',
+        sort: '-createdAt',
+      });
+      setNotifications(response.docs);
 
       // Show toast for new unread notifications
-      data.docs
-        .filter((notification: Notification) => !notification.read)
-        .forEach((notification: Notification) => {
-          toast[notification.type](notification.message);
+      response.docs
+        .filter(notification => !notification.read)
+        .forEach(notification => {
+          toast[notification.type as 'info' | 'success' | 'warning' | 'error'](
+            notification.message
+          );
         });
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -36,16 +32,14 @@ export const useNotifications = () => {
     }
   };
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = async (notificationId: number) => {
     try {
-      await fetch(`/api/notifications/${notificationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      await payload.update({
+        collection: 'notifications',
+        id: notificationId,
+        data: {
           read: true,
-        }),
+        },
       });
 
       // Update local state
@@ -66,14 +60,12 @@ export const useNotifications = () => {
       const unreadNotifications = notifications.filter(n => !n.read);
       await Promise.all(
         unreadNotifications.map(notification =>
-          fetch(`/api/notifications/${notification.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+          payload.update({
+            collection: 'notifications',
+            id: notification.id,
+            data: {
               read: true,
-            }),
+            },
           })
         )
       );

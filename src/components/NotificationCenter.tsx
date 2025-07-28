@@ -13,7 +13,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { format } from 'date-fns';
 
-export function NotificationCenter() {
+export default function NotificationCenter() {
   const { notifications, loading, markAsRead, markAllAsRead } =
     useNotifications();
   const unreadCount = notifications.filter(n => !n.read).length;

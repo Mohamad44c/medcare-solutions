@@ -1,10 +1,18 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
+
+type RepairStatus = 'done' | 'notDone' | 'pending';
 
 export const Repairs: CollectionConfig = {
   slug: 'repairs',
   admin: {
     useAsTitle: 'repairNumber',
-    defaultColumns: ['repairNumber', 'scope', 'status', 'totalCost', 'createdAt'],
+    defaultColumns: [
+      'repairNumber',
+      'scope',
+      'status',
+      'totalCost',
+      'createdAt',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -49,13 +57,15 @@ export const Repairs: CollectionConfig = {
                     },
                   ],
                 },
-              })
+              });
 
               if (quotationResult.docs.length === 0) {
-                throw new Error('Selected scope does not have an approved quotation')
+                throw new Error(
+                  'Selected scope does not have an approved quotation'
+                );
               }
             }
-            return value
+            return value;
           },
         ],
       },
@@ -65,7 +75,8 @@ export const Repairs: CollectionConfig = {
       type: 'relationship',
       relationTo: 'evaluation',
       admin: {
-        description: 'Only evaluations with scopes that have approved quotations are shown',
+        description:
+          'Only evaluations with scopes that have approved quotations are shown',
       },
       hooks: {
         beforeValidate: [
@@ -75,13 +86,16 @@ export const Repairs: CollectionConfig = {
               const evaluation = await req.payload.findByID({
                 collection: 'evaluation',
                 id: value,
-              })
+              });
 
               if (evaluation && evaluation.scope) {
                 // Handle both populated object and ID string cases
-                let scopeId = evaluation.scope
-                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
-                  scopeId = evaluation.scope.id
+                let scopeId = evaluation.scope;
+                if (
+                  typeof evaluation.scope === 'object' &&
+                  evaluation.scope.id
+                ) {
+                  scopeId = evaluation.scope.id;
                 }
 
                 const quotationResult = await req.payload.find({
@@ -100,14 +114,16 @@ export const Repairs: CollectionConfig = {
                       },
                     ],
                   },
-                })
+                });
 
                 if (quotationResult.docs.length === 0) {
-                  throw new Error('Selected evaluation does not have an approved quotation')
+                  throw new Error(
+                    'Selected evaluation does not have an approved quotation'
+                  );
                 }
               }
             }
-            return value
+            return value;
           },
         ],
       },
@@ -138,7 +154,8 @@ export const Repairs: CollectionConfig = {
           relationTo: 'inventory',
           required: true,
           admin: {
-            description: 'Select a part from inventory. Unit cost will be automatically populated.',
+            description:
+              'Select a part from inventory. Unit cost will be automatically populated.',
           },
         },
         {
@@ -152,7 +169,8 @@ export const Repairs: CollectionConfig = {
           type: 'number',
           admin: {
             readOnly: true,
-            description: 'Unit cost is automatically populated from the selected part',
+            description:
+              'Unit cost is automatically populated from the selected part',
           },
         },
         {
@@ -201,43 +219,51 @@ export const Repairs: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read repairs
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // Only admins can create repairs
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     update: ({ req: { user } }) => {
       // Only admins can update repairs
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete repairs
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Generate repair number
         if (operation === 'create') {
           const result = await req.payload.find({
             collection: 'repairs',
             limit: 1,
             sort: '-repairNumber',
-          })
+          });
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].repairNumber
-            const match = lastNumber.match(/^R(\d+)$/)
+            const lastNumber = result.docs[0].repairNumber;
+            const match = lastNumber.match(/^R(\d+)$/);
             if (match) {
-              nextNumber = parseInt(match[1]) + 1
+              nextNumber = parseInt(match[1]) + 1;
             }
           }
 
-          data.repairNumber = `R${nextNumber.toString().padStart(4, '0')}`
-          data.createdBy = req.user?.id
+          data.repairNumber = `R${nextNumber.toString().padStart(4, '0')}`;
+          data.createdBy = req.user?.id;
         }
 
         // Populate unit cost from selected parts and calculate totals
@@ -250,48 +276,100 @@ export const Repairs: CollectionConfig = {
               partUsed.part === null ||
               partUsed.part === undefined
             ) {
-              partUsed.unitCost = 0
-              partUsed.totalCost = 0
-              continue
+              partUsed.unitCost = 0;
+              partUsed.totalCost = 0;
+              continue;
             }
 
             try {
               // Fetch the part to get its unit cost
-              const partId = typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+              const partId =
+                typeof partUsed.part === 'string'
+                  ? partUsed.part
+                  : partUsed.part.id;
 
               // Validate part ID
-              if (!partId || typeof partId !== 'string' || partId.trim() === '') {
-                console.warn('Invalid part ID:', partId)
-                partUsed.unitCost = 0
+              if (
+                !partId ||
+                typeof partId !== 'string' ||
+                partId.trim() === ''
+              ) {
+                console.warn('Invalid part ID:', partId);
+                partUsed.unitCost = 0;
               } else {
                 const part = await req.payload.findByID({
                   collection: 'inventory',
                   id: partId,
-                })
+                });
 
                 if (part) {
-                  partUsed.unitCost = (part as any).unitCost || 0
+                  partUsed.unitCost = (part as any).unitCost || 0;
                 } else {
-                  console.warn('Part not found with ID:', partId)
-                  partUsed.unitCost = 0
+                  console.warn('Part not found with ID:', partId);
+                  partUsed.unitCost = 0;
                 }
               }
             } catch (error) {
-              console.warn('Could not fetch part for unit cost:', error)
-              partUsed.unitCost = 0
+              console.warn('Could not fetch part for unit cost:', error);
+              partUsed.unitCost = 0;
             }
 
             // Calculate total cost for this part
-            const partTotal = (partUsed.quantityUsed || 0) * (partUsed.unitCost || 0)
-            partUsed.totalCost = partTotal
+            const partTotal =
+              (partUsed.quantityUsed || 0) * (partUsed.unitCost || 0);
+            partUsed.totalCost = partTotal;
           }
         }
 
-        return data
+        return data;
       },
     ],
     afterChange: [
-      async ({ req, operation, doc }: { req: any; operation: string; doc: any }) => {
+      async ({
+        req,
+        operation,
+        doc,
+        previousDoc,
+      }: {
+        req: any;
+        operation: string;
+        doc: any;
+        previousDoc: any;
+      }) => {
+        // Create notification for status change
+        if (
+          operation === 'update' &&
+          previousDoc &&
+          doc.status !== previousDoc.status
+        ) {
+          const statusMessages: Record<RepairStatus, string> = {
+            done: 'Repair has been completed',
+            notDone: 'Repair could not be completed',
+            pending: 'Repair status has been set back to pending',
+          };
+
+          const statusTypes: Record<RepairStatus, string> = {
+            done: 'success',
+            notDone: 'error',
+            pending: 'info',
+          };
+
+          // Create notification for the repair creator
+          if (doc.createdBy) {
+            await req.payload.create({
+              collection: 'notifications',
+              data: {
+                message: `${doc.repairNumber}: ${statusMessages[doc.status as RepairStatus]}`,
+                type: statusTypes[doc.status as RepairStatus],
+                user: doc.createdBy,
+                relatedCollection: 'repairs',
+                relatedDocument: doc.id,
+                read: false,
+              },
+            });
+          }
+        }
+
         // Deduct parts from inventory when repair is created or parts are updated
         if (operation === 'create' || operation === 'update') {
           if (doc.partsUsed && Array.isArray(doc.partsUsed)) {
@@ -300,24 +378,33 @@ export const Repairs: CollectionConfig = {
                 try {
                   // Get current inventory for this part
                   const partId =
-                    typeof partUsed.part === 'string' ? partUsed.part : partUsed.part.id
+                    typeof partUsed.part === 'string'
+                      ? partUsed.part
+                      : partUsed.part.id;
 
                   // Validate part ID
-                  if (!partId || typeof partId !== 'string' || partId.trim() === '') {
-                    console.warn('Invalid part ID for inventory update:', partId)
-                    continue
+                  if (
+                    !partId ||
+                    typeof partId !== 'string' ||
+                    partId.trim() === ''
+                  ) {
+                    console.warn(
+                      'Invalid part ID for inventory update:',
+                      partId
+                    );
+                    continue;
                   }
 
                   const inventoryResult = await req.payload.findByID({
                     collection: 'inventory',
                     id: partId,
-                  })
+                  });
 
                   if (inventoryResult) {
                     const newQuantity = Math.max(
                       0,
-                      (inventoryResult.quantity || 0) - partUsed.quantityUsed,
-                    )
+                      (inventoryResult.quantity || 0) - partUsed.quantityUsed
+                    );
 
                     await req.payload.update({
                       collection: 'inventory',
@@ -325,12 +412,12 @@ export const Repairs: CollectionConfig = {
                       data: {
                         quantity: newQuantity,
                       },
-                    })
+                    });
                   } else {
-                    console.warn('Inventory item not found for ID:', partId)
+                    console.warn('Inventory item not found for ID:', partId);
                   }
                 } catch (error) {
-                  console.warn('Error updating inventory for part:', error)
+                  console.warn('Error updating inventory for part:', error);
                 }
               }
             }
@@ -339,4 +426,4 @@ export const Repairs: CollectionConfig = {
       },
     ],
   },
-}
+};

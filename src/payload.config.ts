@@ -1,27 +1,28 @@
 // storage-adapter-import-placeholder
-import { postgresAdapter } from '@payloadcms/db-postgres'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import path from 'path'
-import { buildConfig } from 'payload'
-import { fileURLToPath } from 'url'
-import { s3Storage } from '@payloadcms/storage-s3'
-import sharp from 'sharp'
+import { postgresAdapter } from '@payloadcms/db-postgres';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import path from 'path';
+import { buildConfig } from 'payload';
+import { fileURLToPath } from 'url';
+import { s3Storage } from '@payloadcms/storage-s3';
+import sharp from 'sharp';
 
-import { Users } from './globals/Users'
-import { Media } from './collections/Media'
-import { Brands } from './collections/Brands'
-import { Scopes } from './collections/Scopes'
-import { Settings } from './globals/Settings'
-import { Manufacturers } from './collections/Manufacturers'
-import { Companies } from './collections/Companies'
-import { Inventory } from './collections/Inventory'
-import { Repairs } from './collections/Repairs'
-import { Evaluation } from './collections/Evaluation'
-import { Quotation } from './collections/Quotation'
-import { Invoices } from './collections/Invoices'
+import { Users } from './globals/Users';
+import { Media } from './collections/Media';
+import { Brands } from './collections/Brands';
+import { Scopes } from './collections/Scopes';
+import { Settings } from './globals/Settings';
+import { Manufacturers } from './collections/Manufacturers';
+import { Companies } from './collections/Companies';
+import { Inventory } from './collections/Inventory';
+import { Repairs } from './collections/Repairs';
+import { Evaluation } from './collections/Evaluation';
+import { Quotation } from './collections/Quotation';
+import { Invoices } from './collections/Invoices';
+import { Notifications } from './collections/Notifications';
 
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 export default buildConfig({
   admin: {
@@ -49,6 +50,7 @@ export default buildConfig({
     Companies,
     Users,
     Media,
+    Notifications,
   ],
   globals: [Settings],
   editor: lexicalEditor(),
@@ -81,4 +83,4 @@ export default buildConfig({
       },
     }),
   ],
-})
+});

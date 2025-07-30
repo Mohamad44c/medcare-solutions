@@ -1,14 +1,18 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
+import {
+  checkRelatedRecords,
+  createDeletionError,
+} from '../lib/cascade-delete';
 
 type Scope = {
-  code?: string
-  type: 'rigid' | 'flexible'
-  createdBy?: string
-}
+  code?: string;
+  type: 'rigid' | 'flexible';
+  createdBy?: string;
+};
 
 interface ScopeDocument {
-  code: string
-  [key: string]: any
+  code: string;
+  [key: string]: any;
 }
 
 export const Scopes: CollectionConfig = {
@@ -98,21 +102,21 @@ export const Scopes: CollectionConfig = {
     },
     {
       type: 'collapsible',
-      label: 'Status Information',
+      label: 'Additional Information',
       admin: {
-        initCollapsed: false,
+        initCollapsed: true,
       },
       fields: [
         {
           name: 'status',
           type: 'select',
           options: [
-            { label: 'Pending', value: 'pending' },
-            { label: 'Approved', value: 'approved' },
-            { label: 'Denied', value: 'denied' },
+            { label: 'Active', value: 'active' },
+            { label: 'Inactive', value: 'inactive' },
+            { label: 'Under Repair', value: 'under_repair' },
+            { label: 'Retired', value: 'retired' },
           ],
-          defaultValue: 'pending',
-          required: true,
+          defaultValue: 'active',
         },
         {
           name: 'description',
@@ -129,7 +133,6 @@ export const Scopes: CollectionConfig = {
             },
           },
         },
-
         {
           name: 'createdBy',
           type: 'relationship',
@@ -147,33 +150,41 @@ export const Scopes: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read scopes
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // All authenticated users can create scopes
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     update: ({ req: { user } }) => {
       // Only admins can update scopes after creation
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete scopes
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: Partial<Scope> }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: Partial<Scope>;
+      }) => {
         if (operation === 'create' && req.user) {
           data = {
             ...data,
             createdBy: req.user.id,
-          }
+          };
         }
 
         if (operation === 'create') {
-          const prefix = data.type === 'rigid' ? 'RG' : 'FL'
+          const prefix = data.type === 'rigid' ? 'RG' : 'FL';
 
           const result = await req.payload.find({
             collection: 'scopes',
@@ -183,33 +194,61 @@ export const Scopes: CollectionConfig = {
               },
             },
             limit: 1000,
-          })
+          });
 
           // Filter results to only include codes with the correct prefix
           const filteredDocs = result.docs.filter(
-            (doc: ScopeDocument) => doc.code && doc.code.startsWith(prefix + '-'),
-          )
+            (doc: ScopeDocument) =>
+              doc.code && doc.code.startsWith(prefix + '-')
+          );
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (filteredDocs.length > 0) {
             const numbers = filteredDocs
               .map((doc: ScopeDocument) => {
-                const match = doc.code.match(/^(?:RG|FL)-(\d+)$/)
-                return match ? parseInt(match[1]) : 0
+                const match = doc.code.match(/^(?:RG|FL)-(\d+)$/);
+                return match ? parseInt(match[1]) : 0;
               })
-              .filter((num: number) => !isNaN(num) && num > 0)
+              .filter((num: number) => !isNaN(num) && num > 0);
 
             if (numbers.length > 0) {
-              nextNumber = Math.max(...numbers) + 1
+              nextNumber = Math.max(...numbers) + 1;
             }
           }
 
-          const formattedNumber = nextNumber.toString().padStart(4, '0')
-          data.code = `${prefix}-${formattedNumber}`
+          const formattedNumber = nextNumber.toString().padStart(4, '0');
+          data.code = `${prefix}-${formattedNumber}`;
         }
 
-        return data
+        return data;
+      },
+    ],
+    beforeDelete: [
+      async ({ req, id }: { req: any; id: string | number }) => {
+        try {
+          // Check for related records before deletion
+          const relationships = [
+            { collection: 'evaluation', field: 'scope' },
+            { collection: 'quotation', field: 'scope' },
+            { collection: 'invoices', field: 'scope' },
+            { collection: 'repairs', field: 'scope' },
+          ];
+
+          const relatedRecords = await checkRelatedRecords(
+            req,
+            'scope',
+            id,
+            relationships
+          );
+
+          if (relatedRecords.length > 0) {
+            throw new Error(createDeletionError('scope', relatedRecords));
+          }
+        } catch (error) {
+          // Re-throw the error to prevent deletion
+          throw error;
+        }
       },
     ],
   },
-}
+};

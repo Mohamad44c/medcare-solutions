@@ -154,7 +154,7 @@ export interface Scope {
   serialNumber: string;
   brand: number | Brand;
   manufacturer: number | Manufacturer;
-  status: 'pending' | 'approved' | 'denied';
+  status?: ('active' | 'inactive' | 'under_repair' | 'retired') | null;
   description?: {
     root: {
       type: string;

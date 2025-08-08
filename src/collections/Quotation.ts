@@ -204,6 +204,18 @@ export const Quotation: CollectionConfig = {
         readOnly: true,
       },
     },
+    {
+      name: 'createInvoice',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Click the button below to create a new invoice for this quotation',
+        components: {
+          Field: 'CreateInvoiceField#default',
+        },
+      },
+    },
   ],
   access: {
     read: ({ req: { user } }) => {

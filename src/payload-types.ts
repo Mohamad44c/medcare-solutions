@@ -466,6 +466,10 @@ export interface Quotation {
   quotationStatus: 'pending' | 'approved' | 'denied';
   notes?: string | null;
   createdBy?: (number | null) | User;
+  /**
+   * Click the button below to create a new invoice for this quotation
+   */
+  createInvoice?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -479,6 +483,22 @@ export interface Invoice {
   id: number;
   invoiceNumber: string;
   scope: number | Scope;
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
   repair?: (number | null) | Repair;
   quotation?: (number | null) | Quotation;
   invoiceDate?: string | null;
@@ -757,6 +777,7 @@ export interface QuotationSelect<T extends boolean = true> {
   quotationStatus?: T;
   notes?: T;
   createdBy?: T;
+  createInvoice?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -767,6 +788,10 @@ export interface QuotationSelect<T extends boolean = true> {
 export interface InvoicesSelect<T extends boolean = true> {
   invoiceNumber?: T;
   scope?: T;
+  scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   repair?: T;
   quotation?: T;
   invoiceDate?: T;

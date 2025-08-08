@@ -1,10 +1,16 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
 
 export const Invoices: CollectionConfig = {
   slug: 'invoices',
   admin: {
     useAsTitle: 'invoiceNumber',
-    defaultColumns: ['invoiceNumber', 'scope', 'status', 'totalDue', 'createdAt'],
+    defaultColumns: [
+      'invoiceNumber',
+      'scope',
+      'status',
+      'totalDue',
+      'createdAt',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -25,6 +31,42 @@ export const Invoices: CollectionConfig = {
       type: 'relationship',
       relationTo: 'scopes',
       required: true,
+    },
+    {
+      name: 'scopeCode',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Scope code (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'scopeName',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Scope name (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'modelNumber',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Model number (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'serialNumber',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Serial number (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
     },
     {
       name: 'repair',
@@ -127,7 +169,8 @@ export const Invoices: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Show TVA amount in Lebanese Pounds (LBP) in addition to USD',
+        description:
+          'Show TVA amount in Lebanese Pounds (LBP) in addition to USD',
       },
     },
     {
@@ -169,64 +212,130 @@ export const Invoices: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read invoices
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // Only admins can create invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     update: ({ req: { user } }) => {
       // Only admins can update invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete invoices
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Generate invoice number
         if (operation === 'create') {
           const result = await req.payload.find({
             collection: 'invoices',
             limit: 1,
             sort: '-invoiceNumber',
-          })
+          });
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].invoiceNumber
-            const match = lastNumber.match(/^SA1-(\d+)$/)
+            const lastNumber = result.docs[0].invoiceNumber;
+            const match = lastNumber.match(/^SA1-(\d+)$/);
             if (match) {
-              nextNumber = parseInt(match[1]) + 1
+              nextNumber = parseInt(match[1]) + 1;
             }
           }
 
-          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`
-          data.createdBy = req.user?.id
+          data.invoiceNumber = `SA1-${nextNumber.toString().padStart(4, '0')}`;
+          data.createdBy = req.user?.id;
+        }
+
+        // Populate scope information from scope relationship
+        if (data.scope) {
+          try {
+            // Handle both populated object and ID cases
+            let scopeId = data.scope;
+            if (typeof data.scope === 'object' && data.scope.id) {
+              scopeId = data.scope.id;
+            }
+
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: scopeId,
+            });
+            if (scope) {
+              data.scopeCode = scope.code || '';
+              data.scopeName = scope.name || '';
+              data.modelNumber = scope.modelNumber || '';
+              data.serialNumber = scope.serialNumber || '';
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope details:', error);
+          }
         }
 
         // Calculate totals automatically
         if (data.unitPrice !== undefined) {
-          const unitPrice = parseFloat(data.unitPrice) || 0
+          const unitPrice = parseFloat(data.unitPrice) || 0;
 
           // Calculate total price (unit price × quantity)
-          data.totalPrice = unitPrice
+          data.totalPrice = unitPrice;
 
           // Subtotal is the same as total price
-          data.subtotal = data.totalPrice
+          data.subtotal = data.totalPrice;
 
           // Calculate tax (11% of subtotal)
-          data.tax = Math.round(data.subtotal * 0.11 * 100) / 100
+          data.tax = Math.round(data.subtotal * 0.11 * 100) / 100;
 
           // Calculate total due (subtotal + tax)
-          data.totalDue = data.subtotal + data.tax
+          data.totalDue = data.subtotal + data.tax;
         }
 
-        return data
+        return data;
+      },
+    ],
+    afterRead: [
+      async ({ doc, req }: { doc: any; req: any }) => {
+        // Populate scope details for display
+        if (
+          doc.scope &&
+          (!doc.scopeCode ||
+            !doc.scopeName ||
+            !doc.modelNumber ||
+            !doc.serialNumber)
+        ) {
+          try {
+            // Handle both populated object and ID cases
+            let scopeId = doc.scope;
+            if (typeof doc.scope === 'object' && doc.scope.id) {
+              scopeId = doc.scope.id;
+            }
+
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: scopeId,
+            });
+            if (scope) {
+              doc.scopeCode = scope.code || '';
+              doc.scopeName = scope.name || '';
+              doc.modelNumber = scope.modelNumber || '';
+              doc.serialNumber = scope.serialNumber || '';
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope details for display:', error);
+          }
+        }
+        return doc;
       },
     ],
   },
-}
+};

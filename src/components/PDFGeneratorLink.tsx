@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import React from 'react'
-import { Button } from './ui/button'
+import Link from 'next/link';
+import React from 'react';
+import { Button } from './ui/button';
 
 export default function PDFGeneratorLink() {
   return (
@@ -14,5 +14,5 @@ export default function PDFGeneratorLink() {
         Open PDF Generator
       </Button>
     </Link>
-  )
+  );
 }

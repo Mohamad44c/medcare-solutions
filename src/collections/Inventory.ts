@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
 
 export const Inventory: CollectionConfig = {
   slug: 'inventory',
@@ -156,24 +156,32 @@ export const Inventory: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read inventory
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // Only admins can create inventory items
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     update: ({ req: { user } }) => {
       // Only admins can update inventory
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete inventory
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Validate unique part number
         if (data.partNumber) {
           const existingItem = await req.payload.find({
@@ -192,29 +200,29 @@ export const Inventory: CollectionConfig = {
                 },
               ],
             },
-          })
+          });
 
           if (existingItem.docs.length > 0) {
             throw new Error(
-              `Part number "${data.partNumber}" already exists. Please use a unique part number.`,
-            )
+              `Part number "${data.partNumber}" already exists. Please use a unique part number.`
+            );
           }
         }
 
         // Update status based on quantity
         if (data.quantity !== undefined) {
           if (data.quantity <= 0) {
-            data.status = 'outOfStock'
+            data.status = 'outOfStock';
           } else if (data.quantity <= (data.reorderPoint || 5)) {
-            data.status = 'lowStock'
+            data.status = 'lowStock';
           } else {
-            data.status = 'inStock'
+            data.status = 'inStock';
           }
         }
 
-        data.lastUpdated = new Date().toISOString()
-        return data
+        data.lastUpdated = new Date().toISOString();
+        return data;
       },
     ],
   },
-}
+};

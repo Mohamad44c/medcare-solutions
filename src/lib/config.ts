@@ -50,18 +50,20 @@ export const config = {
     email: 'info@mcs.com',
     location: 'Beirut Lebanon',
   },
-}
+};
 
 /**
  * Validate required environment variables
  */
 export function validateEnvironment(): void {
-  const required = ['DATABASE_URL', 'DATABASE_URL_UNPOOLED']
+  const required = ['DATABASE_URL', 'DATABASE_URL_UNPOOLED'];
 
-  const missing = required.filter((key) => !process.env[key])
+  const missing = required.filter(key => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}`
+    );
   }
 }
 
@@ -79,7 +81,7 @@ export function getS3Config() {
       },
       endpoint: config.s3.endpoint,
       forcePathStyle: config.s3.forcePathStyle,
-    }
+    };
   }
 
   // Fallback to AWS_ prefixed variables
@@ -90,8 +92,8 @@ export function getS3Config() {
         accessKeyId: config.aws.accessKeyId,
         secretAccessKey: config.aws.secretAccessKey,
       },
-    }
+    };
   }
 
-  return null
+  return null;
 }

@@ -1,57 +1,62 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 interface QuotationPDFButtonProps {
-  quotationId?: string
+  quotationId?: string;
 }
 
-const QuotationPDFButton: React.FC<QuotationPDFButtonProps> = ({ quotationId }) => {
-  const [isGenerating, setIsGenerating] = useState(false)
+const QuotationPDFButton: React.FC<QuotationPDFButtonProps> = ({
+  quotationId,
+}) => {
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePDF = async () => {
     if (!quotationId) {
-      alert('Quotation ID not found')
-      return
+      alert('Quotation ID not found');
+      return;
     }
 
-    setIsGenerating(true)
+    setIsGenerating(true);
     try {
-      const response = await fetch(`/api/quotations/${quotationId}/generate-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      const response = await fetch(
+        `/api/quotations/${quotationId}/generate-pdf`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json();
 
         // Download the PDF
         if (data.pdfUrl) {
-          const link = document.createElement('a')
-          link.href = data.pdfUrl
-          link.download = `quotation-${data.quotationNumber}.pdf`
-          link.target = '_blank'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
+          const link = document.createElement('a');
+          link.href = data.pdfUrl;
+          link.download = `quotation-${data.quotationNumber}.pdf`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
 
-          alert('PDF generated successfully!')
+          alert('PDF generated successfully!');
         } else {
-          alert('PDF generated but no download URL provided')
+          alert('PDF generated but no download URL provided');
         }
       } else {
-        const error = await response.json()
-        alert(`Error: ${error.message || 'Failed to generate PDF'}`)
+        const error = await response.json();
+        alert(`Error: ${error.message || 'Failed to generate PDF'}`);
       }
     } catch (error) {
-      console.error('Error generating PDF:', error)
-      alert('Failed to generate PDF. Please try again.')
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   return (
     <div
@@ -90,7 +95,7 @@ const QuotationPDFButton: React.FC<QuotationPDFButtonProps> = ({ quotationId }) 
         </p>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default QuotationPDFButton
+export default QuotationPDFButton;

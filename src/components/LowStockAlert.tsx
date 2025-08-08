@@ -1,38 +1,38 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
 interface LowStockItem {
-  id: string
-  name: string
-  quantity: number
-  reorder_point: number
-  status: string
+  id: string;
+  name: string;
+  quantity: number;
+  reorder_point: number;
+  status: string;
 }
 
 const LowStockAlert: React.FC = () => {
-  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || ''
+  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || '';
 
   useEffect(() => {
     const fetchLowStockItems = async () => {
       try {
         const response = await fetch(
-          `${serverURL}/api/inventory?where[status][equals]=low_stock&limit=10`,
-        )
-        const data = await response.json()
-        setLowStockItems(data.docs || [])
+          `${serverURL}/api/inventory?where[status][equals]=low_stock&limit=10`
+        );
+        const data = await response.json();
+        setLowStockItems(data.docs || []);
       } catch (error) {
-        console.error('Error fetching low stock items:', error)
+        console.error('Error fetching low stock items:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchLowStockItems()
-  }, [serverURL])
+    fetchLowStockItems();
+  }, [serverURL]);
 
   if (loading) {
-    return <div>Loading low stock alerts...</div>
+    return <div>Loading low stock alerts...</div>;
   }
 
   if (lowStockItems.length === 0) {
@@ -46,10 +46,14 @@ const LowStockAlert: React.FC = () => {
           margin: '16px 0',
         }}
       >
-        <h3 style={{ margin: '0 0 8px 0', color: '#0ea5e9' }}>✅ All Stock Levels Normal</h3>
-        <p style={{ margin: 0, color: '#0369a1' }}>No items are currently low in stock.</p>
+        <h3 style={{ margin: '0 0 8px 0', color: '#0ea5e9' }}>
+          ✅ All Stock Levels Normal
+        </h3>
+        <p style={{ margin: 0, color: '#0369a1' }}>
+          No items are currently low in stock.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -66,7 +70,7 @@ const LowStockAlert: React.FC = () => {
         ⚠️ Low Stock Alert ({lowStockItems.length} items)
       </h3>
       <div style={{ display: 'grid', gap: '8px' }}>
-        {lowStockItems.map((item) => (
+        {lowStockItems.map(item => (
           <div
             key={item.id}
             style={{
@@ -76,13 +80,13 @@ const LowStockAlert: React.FC = () => {
               border: '1px solid #fca5a5',
             }}
           >
-            <strong>{item.name}</strong> - Quantity: {item.quantity} (Reorder point:{' '}
-            {item.reorder_point})
+            <strong>{item.name}</strong> - Quantity: {item.quantity} (Reorder
+            point: {item.reorder_point})
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LowStockAlert
+export default LowStockAlert;

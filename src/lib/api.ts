@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { createErrorResponse } from './errors'
+import { NextResponse } from 'next/server';
+import { createErrorResponse } from './errors';
 
 /**
  * Create a successful API response
@@ -7,7 +7,7 @@ import { createErrorResponse } from './errors'
 export function createSuccessResponse<T = any>(
   data: T,
   message: string = 'Success',
-  statusCode: number = 200,
+  statusCode: number = 200
 ) {
   return NextResponse.json(
     {
@@ -15,17 +15,17 @@ export function createSuccessResponse<T = any>(
       message,
       data,
     },
-    { status: statusCode },
-  )
+    { status: statusCode }
+  );
 }
 
 /**
  * Create an error API response
  */
 export function createApiErrorResponse(error: Error, statusCode: number = 500) {
-  const errorResponse = createErrorResponse(error)
+  const errorResponse = createErrorResponse(error);
 
-  return NextResponse.json(errorResponse, { status: statusCode })
+  return NextResponse.json(errorResponse, { status: statusCode });
 }
 
 /**
@@ -36,9 +36,9 @@ export function createPaginatedResponse<T = any>(
   page: number,
   limit: number,
   total: number,
-  message: string = 'Success',
+  message: string = 'Success'
 ) {
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.ceil(total / limit);
 
   return NextResponse.json({
     success: true,
@@ -52,7 +52,7 @@ export function createPaginatedResponse<T = any>(
       hasNext: page < totalPages,
       hasPrev: page > 1,
     },
-  })
+  });
 }
 
 /**
@@ -61,7 +61,7 @@ export function createPaginatedResponse<T = any>(
 export function createFileResponse(
   buffer: Buffer,
   filename: string,
-  contentType: string = 'application/octet-stream',
+  contentType: string = 'application/octet-stream'
 ) {
   return new NextResponse(buffer, {
     headers: {
@@ -69,12 +69,12 @@ export function createFileResponse(
       'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': buffer.length.toString(),
     },
-  })
+  });
 }
 
 /**
  * Create a PDF response
  */
 export function createPDFResponse(buffer: Buffer, filename: string) {
-  return createFileResponse(buffer, filename, 'application/pdf')
+  return createFileResponse(buffer, filename, 'application/pdf');
 }

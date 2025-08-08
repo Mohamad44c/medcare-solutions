@@ -1,20 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 interface InvoicePDFButtonProps {
-  invoiceId: string
-  invoiceNumber: string
+  invoiceId: string;
+  invoiceNumber: string;
 }
 
-const InvoicePDFButton: React.FC<InvoicePDFButtonProps> = ({ invoiceId, invoiceNumber }) => {
-  const [isGenerating, setIsGenerating] = useState(false)
+const InvoicePDFButton: React.FC<InvoicePDFButtonProps> = ({
+  invoiceId,
+  invoiceNumber,
+}) => {
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePDF = async () => {
     if (!invoiceId) {
-      alert('Invoice ID is required')
-      return
+      alert('Invoice ID is required');
+      return;
     }
 
-    setIsGenerating(true)
+    setIsGenerating(true);
 
     try {
       const response = await fetch(`/api/invoices/${invoiceId}/generate-pdf`, {
@@ -22,36 +25,36 @@ const InvoicePDFButton: React.FC<InvoicePDFButtonProps> = ({ invoiceId, invoiceN
         headers: {
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json();
 
         // Download the PDF
         if (data.pdfUrl) {
-          const link = document.createElement('a')
-          link.href = data.pdfUrl
-          link.download = `invoice-${data.invoiceNumber}.pdf`
-          link.target = '_blank'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
+          const link = document.createElement('a');
+          link.href = data.pdfUrl;
+          link.download = `invoice-${data.invoiceNumber}.pdf`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
 
-          alert('Invoice PDF generated and downloaded successfully!')
+          alert('Invoice PDF generated and downloaded successfully!');
         } else {
-          alert('Invoice PDF generated but no download URL provided')
+          alert('Invoice PDF generated but no download URL provided');
         }
       } else {
-        const error = await response.json()
-        alert(`Error: ${error.message || 'Failed to generate invoice PDF'}`)
+        const error = await response.json();
+        alert(`Error: ${error.message || 'Failed to generate invoice PDF'}`);
       }
     } catch (error) {
-      console.error('Error generating invoice PDF:', error)
-      alert('Failed to generate invoice PDF. Please try again.')
+      console.error('Error generating invoice PDF:', error);
+      alert('Failed to generate invoice PDF. Please try again.');
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   return (
     <div
@@ -63,7 +66,9 @@ const InvoicePDFButton: React.FC<InvoicePDFButtonProps> = ({ invoiceId, invoiceN
         marginBottom: '20px',
       }}
     >
-      <h3 style={{ margin: '0 0 15px 0', color: '#258bd1' }}>Invoice PDF Generation</h3>
+      <h3 style={{ margin: '0 0 15px 0', color: '#258bd1' }}>
+        Invoice PDF Generation
+      </h3>
       <p style={{ margin: '0 0 15px 0', color: '#666' }}>
         Generate and download a PDF version of this invoice.
       </p>
@@ -90,7 +95,7 @@ const InvoicePDFButton: React.FC<InvoicePDFButtonProps> = ({ invoiceId, invoiceN
         </p>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InvoicePDFButton
+export default InvoicePDFButton;

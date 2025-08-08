@@ -1,4 +1,4 @@
-import type { GlobalConfig } from 'payload'
+import type { GlobalConfig } from 'payload';
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
@@ -38,4 +38,4 @@ export const Settings: GlobalConfig = {
       },
     },
   ],
-}
+};

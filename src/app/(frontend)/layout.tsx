@@ -1,13 +1,13 @@
-import React from 'react'
-import './globals.css'
+import React from 'react';
+import './globals.css';
 
 export const metadata = {
   description: 'MCS',
   title: 'MCS Operations',
-}
+};
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
-  const { children } = props
+  const { children } = props;
 
   return (
     <html lang="en">
@@ -15,5 +15,5 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <main className="w-full">{children}</main>
       </body>
     </html>
-  )
+  );
 }

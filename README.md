@@ -104,6 +104,7 @@ For detailed documentation on each collection and its fields, refer to the Paylo
 ## Questions
 
 If you have any questions or issues, please reach out to our support team or create an issue in the repository.
+
 # MedCare Solutions - Production Ready
 
 A comprehensive medical equipment management system built with Next.js, Payload CMS, and PostgreSQL.

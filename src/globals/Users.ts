@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -61,25 +61,25 @@ export const Users: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       // Users can read their own profile, admins can read all
-      if (user?.role === 'admin') return true
+      if (user?.role === 'admin') return true;
       return {
         id: {
           equals: user?.id,
         },
-      }
+      };
     },
     update: ({ req: { user } }) => {
       // Users can update their own profile, admins can update all
-      if (user?.role === 'admin') return true
+      if (user?.role === 'admin') return true;
       return {
         id: {
           equals: user?.id,
         },
-      }
+      };
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete users
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
-}
+};

@@ -413,6 +413,10 @@ export interface Evaluation {
   estimatedDuration?: number | null;
   evaluatedBy?: (number | null) | User;
   notes?: string | null;
+  /**
+   * Click the button below to create a new quotation for this evaluation
+   */
+  createQuotation?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -426,6 +430,22 @@ export interface Quotation {
   id: number;
   quotationNumber: string;
   scope: number | Scope;
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
   /**
    * Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.
    */
@@ -711,6 +731,7 @@ export interface EvaluationSelect<T extends boolean = true> {
   estimatedDuration?: T;
   evaluatedBy?: T;
   notes?: T;
+  createQuotation?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -721,6 +742,10 @@ export interface EvaluationSelect<T extends boolean = true> {
 export interface QuotationSelect<T extends boolean = true> {
   quotationNumber?: T;
   scope?: T;
+  scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   evaluation?: T;
   quotationDate?: T;
   offerValidity?: T;

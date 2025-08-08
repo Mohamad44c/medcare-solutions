@@ -128,6 +128,18 @@ export const Evaluation: CollectionConfig = {
       name: 'notes',
       type: 'textarea',
     },
+    {
+      name: 'createQuotation',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Click the button below to create a new quotation for this evaluation',
+        components: {
+          Field: 'CreateQuotationField#default',
+        },
+      },
+    },
   ],
   access: {
     read: ({ req: { user } }) => {
@@ -182,9 +194,15 @@ export const Evaluation: CollectionConfig = {
         // Populate scope code from scope relationship
         if (data.scope) {
           try {
+            // Handle both populated object and ID cases
+            let scopeId = data.scope;
+            if (typeof data.scope === 'object' && data.scope.id) {
+              scopeId = data.scope.id;
+            }
+
             const scope = await req.payload.findByID({
               collection: 'scopes',
-              id: data.scope,
+              id: scopeId,
             });
             if (scope) {
               data.scopeCode = scope.code || '';
@@ -212,9 +230,15 @@ export const Evaluation: CollectionConfig = {
             !doc.serialNumber)
         ) {
           try {
+            // Handle both populated object and ID cases
+            let scopeId = doc.scope;
+            if (typeof doc.scope === 'object' && doc.scope.id) {
+              scopeId = doc.scope.id;
+            }
+
             const scope = await req.payload.findByID({
               collection: 'scopes',
-              id: doc.scope,
+              id: scopeId,
             });
             if (scope) {
               doc.scopeCode = scope.code || '';

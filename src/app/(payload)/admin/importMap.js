@@ -22,6 +22,7 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { default as default_6753c57f99d3d09e63e73cb8f87aee04 } from '../../../components/CreateEvaluationField';
+import { default as default_7d18cffd4315a1faba4e18f5fc43e996 } from '../../../components/CreateQuotationField';
 import { default as default_3a5fb87df56e50e46c26d9ee09efdbb2 } from '../../../components/PDFGeneratorLink';
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client';
 
@@ -73,6 +74,7 @@ export const importMap = {
   '@payloadcms/richtext-lexical/client#ItalicFeatureClient':
     ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   'CreateEvaluationField#default': default_6753c57f99d3d09e63e73cb8f87aee04,
+  'CreateQuotationField#default': default_7d18cffd4315a1faba4e18f5fc43e996,
   '/components/PDFGeneratorLink#default':
     default_3a5fb87df56e50e46c26d9ee09efdbb2,
   '@payloadcms/storage-s3/client#S3ClientUploadHandler':

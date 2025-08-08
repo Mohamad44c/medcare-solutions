@@ -172,6 +172,10 @@ export interface Scope {
   } | null;
   receivedDate?: string | null;
   createdBy?: (number | null) | User;
+  /**
+   * Click the button below to create a new evaluation for this scope
+   */
+  createEvaluation?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -380,6 +384,18 @@ export interface Evaluation {
    * Scope code (auto-populated from scope relationship)
    */
   scopeCode?: string | null;
+  /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
   /**
    * Current status of the evaluation
    */
@@ -623,6 +639,7 @@ export interface ScopesSelect<T extends boolean = true> {
   description?: T;
   receivedDate?: T;
   createdBy?: T;
+  createEvaluation?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -683,6 +700,9 @@ export interface EvaluationSelect<T extends boolean = true> {
   evaluationNumber?: T;
   scope?: T;
   scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   status?: T;
   evaluationDate?: T;
   problemsIdentified?: T;

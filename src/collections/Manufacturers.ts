@@ -1,4 +1,8 @@
 import type { CollectionConfig } from 'payload';
+import {
+  checkRelatedRecords,
+  createDeletionError,
+} from '../lib/cascade-delete';
 
 // List of countries
 const countries = [
@@ -58,51 +62,22 @@ export const Manufacturers: CollectionConfig = {
     beforeDelete: [
       async ({ req, id }: { req: any; id: string | number }) => {
         try {
-          const relatedRecords: { collection: string; count: number }[] = [];
+          // Check for related records before deletion
+          const relationships = [
+            { collection: 'scopes', field: 'manufacturer' },
+            { collection: 'inventory', field: 'partManufacturer' },
+          ];
 
-          // Check if any scopes reference this manufacturer
-          const scopesResult = await req.payload.find({
-            collection: 'scopes',
-            where: {
-              manufacturer: {
-                equals: id,
-              },
-            },
-            limit: 1,
-          });
-
-          if (scopesResult.docs.length > 0) {
-            relatedRecords.push({
-              collection: 'scopes',
-              count: scopesResult.totalDocs,
-            });
-          }
-
-          // Check if any inventory items reference this manufacturer
-          const inventoryResult = await req.payload.find({
-            collection: 'inventory',
-            where: {
-              partManufacturer: {
-                equals: id,
-              },
-            },
-            limit: 1,
-          });
-
-          if (inventoryResult.docs.length > 0) {
-            relatedRecords.push({
-              collection: 'inventory',
-              count: inventoryResult.totalDocs,
-            });
-          }
+          const relatedRecords = await checkRelatedRecords(
+            req,
+            'manufacturer',
+            id,
+            relationships
+          );
 
           if (relatedRecords.length > 0) {
-            const collectionNames = relatedRecords
-              .map(r => `${r.collection} (${r.count})`)
-              .join(', ');
-
             throw new Error(
-              `Cannot delete manufacturer because it has related records in: ${collectionNames}. Please delete the related records first.`
+              createDeletionError('manufacturer', relatedRecords)
             );
           }
         } catch (error) {

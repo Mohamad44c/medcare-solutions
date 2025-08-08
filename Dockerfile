@@ -1,22 +1,20 @@
 # To use this Dockerfile, you have to set `output: 'standalone'` in your next.config.mjs file.
 # From https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 
-FROM node:22.12.0-alpine AS base
+FROM node:20-alpine3.19 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 # Install Chrome and its dependencies
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    nodejs \
-    yarn \
-    libc6-compat
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    chromium~=120.0 \
+    nss~=3.95 \
+    freetype~=2.13 \
+    harfbuzz~=8.3 \
+    ca-certificates~=20230506 \
+    ttf-freefont~=20120503 \
+    libc6-compat~=1.2
     
 # Tell Puppeteer to use the installed Chrome instead of downloading its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
@@ -59,14 +57,14 @@ WORKDIR /app
 ENV NODE_ENV production
 
 # Install Chrome and its dependencies in the runner stage
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    chromium~=120.0 \
+    nss~=3.95 \
+    freetype~=2.13 \
+    harfbuzz~=8.3 \
+    ca-certificates~=20230506 \
+    ttf-freefont~=20120503
 
 # Set Puppeteer environment variables
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true

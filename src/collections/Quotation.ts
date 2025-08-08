@@ -1,10 +1,16 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
 
 export const Quotation: CollectionConfig = {
   slug: 'quotation',
   admin: {
     useAsTitle: 'quotationNumber',
-    defaultColumns: ['quotationNumber', 'scope', 'quotationStatus', 'price', 'createdAt'],
+    defaultColumns: [
+      'quotationNumber',
+      'scope',
+      'quotationStatus',
+      'price',
+      'createdAt',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -27,6 +33,42 @@ export const Quotation: CollectionConfig = {
       required: true,
     },
     {
+      name: 'scopeCode',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Scope code (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'scopeName',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Scope name (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'modelNumber',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Model number (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'serialNumber',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Serial number (auto-populated from scope relationship)',
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'evaluation',
       type: 'relationship',
       relationTo: 'evaluation',
@@ -35,7 +77,7 @@ export const Quotation: CollectionConfig = {
           'Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.',
         condition: (data, siblingData) => {
           // Only show evaluation field if a scope is selected
-          return !!siblingData?.scope
+          return !!siblingData?.scope;
         },
       },
       hooks: {
@@ -46,26 +88,29 @@ export const Quotation: CollectionConfig = {
               const evaluation = await req.payload.findByID({
                 collection: 'evaluation',
                 id: value,
-              })
+              });
 
               // Handle both populated object and ID string cases
-              let evaluationScopeId = ''
+              let evaluationScopeId = '';
               if (evaluation?.scope) {
-                if (typeof evaluation.scope === 'object' && evaluation.scope.id) {
-                  evaluationScopeId = String(evaluation.scope.id)
+                if (
+                  typeof evaluation.scope === 'object' &&
+                  evaluation.scope.id
+                ) {
+                  evaluationScopeId = String(evaluation.scope.id);
                 } else {
-                  evaluationScopeId = String(evaluation.scope)
+                  evaluationScopeId = String(evaluation.scope);
                 }
               }
-              const selectedScopeId = String(data.scope || '')
+              const selectedScopeId = String(data.scope || '');
 
               if (evaluation && evaluationScopeId !== selectedScopeId) {
                 throw new Error(
-                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`,
-                )
+                  `Selected evaluation (${evaluation.evaluationNumber}) does not belong to the selected scope. Please select an evaluation that belongs to this scope.`
+                );
               }
             }
-            return value
+            return value;
           },
         ],
       },
@@ -159,51 +204,129 @@ export const Quotation: CollectionConfig = {
         readOnly: true,
       },
     },
+    {
+      name: 'createInvoice',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Click the button below to create a new invoice for this quotation',
+        components: {
+          Field: 'CreateInvoiceField#default',
+        },
+      },
+    },
   ],
   access: {
     read: ({ req: { user } }) => {
       // All authenticated users can read quotations
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     create: ({ req: { user } }) => {
       // All authenticated users can create quotations
-      return user?.id ? true : false
+      return user?.id ? true : false;
     },
     update: ({ req: { user } }) => {
       // Only admins can update quotations after creation
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
     delete: ({ req: { user } }) => {
       // Only admins can delete quotations
-      return user?.role === 'admin'
+      return user?.role === 'admin';
     },
   },
   hooks: {
     beforeChange: [
-      async ({ req, operation, data }: { req: any; operation: string; data: any }) => {
+      async ({
+        req,
+        operation,
+        data,
+      }: {
+        req: any;
+        operation: string;
+        data: any;
+      }) => {
         // Generate quotation number
         if (operation === 'create') {
           const result = await req.payload.find({
             collection: 'quotation',
             limit: 1,
             sort: '-quotationNumber',
-          })
+          });
 
-          let nextNumber = 1
+          let nextNumber = 1;
           if (result.docs.length > 0) {
-            const lastNumber = result.docs[0].quotationNumber
-            const match = lastNumber.match(/^Q(\d+)$/)
+            const lastNumber = result.docs[0].quotationNumber;
+            const match = lastNumber.match(/^Q(\d+)$/);
             if (match) {
-              nextNumber = parseInt(match[1]) + 1
+              nextNumber = parseInt(match[1]) + 1;
             }
           }
 
-          data.quotationNumber = `Q${nextNumber.toString().padStart(4, '0')}`
-          data.createdBy = req.user?.id
+          data.quotationNumber = `Q${nextNumber.toString().padStart(4, '0')}`;
+          data.createdBy = req.user?.id;
         }
 
-        return data
+        // Populate scope information from scope relationship
+        if (data.scope) {
+          try {
+            // Handle both populated object and ID cases
+            let scopeId = data.scope;
+            if (typeof data.scope === 'object' && data.scope.id) {
+              scopeId = data.scope.id;
+            }
+
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: scopeId,
+            });
+            if (scope) {
+              data.scopeCode = scope.code || '';
+              data.scopeName = scope.name || '';
+              data.modelNumber = scope.modelNumber || '';
+              data.serialNumber = scope.serialNumber || '';
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope details:', error);
+          }
+        }
+
+        return data;
+      },
+    ],
+    afterRead: [
+      async ({ doc, req }: { doc: any; req: any }) => {
+        // Populate scope details for display
+        if (
+          doc.scope &&
+          (!doc.scopeCode ||
+            !doc.scopeName ||
+            !doc.modelNumber ||
+            !doc.serialNumber)
+        ) {
+          try {
+            // Handle both populated object and ID cases
+            let scopeId = doc.scope;
+            if (typeof doc.scope === 'object' && doc.scope.id) {
+              scopeId = doc.scope.id;
+            }
+
+            const scope = await req.payload.findByID({
+              collection: 'scopes',
+              id: scopeId,
+            });
+            if (scope) {
+              doc.scopeCode = scope.code || '';
+              doc.scopeName = scope.name || '';
+              doc.modelNumber = scope.modelNumber || '';
+              doc.serialNumber = scope.serialNumber || '';
+            }
+          } catch (error) {
+            console.warn('Could not fetch scope details for display:', error);
+          }
+        }
+        return doc;
       },
     ],
   },
-}
+};

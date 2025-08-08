@@ -86,147 +86,156 @@
     <button onclick="generatePDF()">📄 Generate & Download PDF</button>
 
     <div id="result"></div>
-    <div id="quotationsList" class="quotations-list" style="display: none"></div>
+    <div
+      id="quotationsList"
+      class="quotations-list"
+      style="display: none"
+    ></div>
 
     <script>
       async function fetchQuotations() {
-        const resultDiv = document.getElementById('result')
-        const quotationsListDiv = document.getElementById('quotationsList')
+        const resultDiv = document.getElementById('result');
+        const quotationsListDiv = document.getElementById('quotationsList');
 
         try {
-          resultDiv.innerHTML = '<div class="result">Loading quotations...</div>'
+          resultDiv.innerHTML =
+            '<div class="result">Loading quotations...</div>';
 
-          const response = await fetch('/api/quotations?limit=10')
-          console.log('Response status:', response.status)
-          console.log('Response headers:', response.headers)
+          const response = await fetch('/api/quotations?limit=10');
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
 
           if (response.ok) {
-            const data = await response.json()
-            console.log('Quotations data:', data)
+            const data = await response.json();
+            console.log('Quotations data:', data);
 
             if (data.docs && data.docs.length > 0) {
-              let html = '<h3>Available Quotations:</h3>'
-              data.docs.forEach((quotation) => {
-                console.log('Quotation data:', quotation)
+              let html = '<h3>Available Quotations:</h3>';
+              data.docs.forEach(quotation => {
+                console.log('Quotation data:', quotation);
                 html += `
-                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotation_number}')">
-                    <strong>${quotation.quotation_number}</strong> - ${quotation.scope?.name || 'No scope'} - $${quotation.price || 0} (ID: ${quotation.id})
+                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotationNumber}')">
+                    <strong>${quotation.quotationNumber}</strong> - ${quotation.scope?.name || 'No scope'} - $${quotation.price || 0} (ID: ${quotation.id})
                   </div>
-                `
-              })
+                `;
+              });
 
-              quotationsListDiv.innerHTML = html
-              quotationsListDiv.style.display = 'block'
+              quotationsListDiv.innerHTML = html;
+              quotationsListDiv.style.display = 'block';
               resultDiv.innerHTML =
-                '<div class="result success">Quotations loaded successfully!</div>'
+                '<div class="result success">Quotations loaded successfully!</div>';
             } else {
               resultDiv.innerHTML =
-                '<div class="result error">No quotations found. Please create a quotation first.</div>'
+                '<div class="result error">No quotations found. Please create a quotation first.</div>';
             }
           } else {
-            const errorText = await response.text()
-            console.error('Error response:', errorText)
-            resultDiv.innerHTML = `<div class="result error">Failed to load quotations. Status: ${response.status}</div>`
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            resultDiv.innerHTML = `<div class="result error">Failed to load quotations. Status: ${response.status}</div>`;
           }
         } catch (error) {
-          console.error('Error:', error)
+          console.error('Error:', error);
           resultDiv.innerHTML =
-            '<div class="result error">Failed to load quotations. Please check the console for details.</div>'
+            '<div class="result error">Failed to load quotations. Please check the console for details.</div>';
         }
       }
 
       async function testQuotations() {
-        const resultDiv = document.getElementById('result')
+        const resultDiv = document.getElementById('result');
 
         try {
-          resultDiv.innerHTML = '<div class="result">Testing quotations endpoint...</div>'
+          resultDiv.innerHTML =
+            '<div class="result">Testing quotations endpoint...</div>';
 
-          const response = await fetch('/api/test-quotations')
+          const response = await fetch('/api/test-quotations');
 
           if (response.ok) {
-            const data = await response.json()
+            const data = await response.json();
 
             if (data.quotations && data.quotations.length > 0) {
-              let html = '<h3>Test Quotations (Raw Data):</h3>'
-              data.quotations.forEach((quotation) => {
+              let html = '<h3>Test Quotations (Raw Data):</h3>';
+              data.quotations.forEach(quotation => {
                 html += `
-                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotation_number}')">
-                    <strong>${quotation.quotation_number}</strong> - ID: ${quotation.id} - Created: ${quotation.created}
+                  <div class="quotation-item" onclick="selectQuotation('${quotation.id}', '${quotation.quotationNumber}')">
+                    <strong>${quotation.quotationNumber}</strong> - ID: ${quotation.id} - Created: ${quotation.created}
                   </div>
-                `
-              })
+                `;
+              });
 
-              document.getElementById('quotationsList').innerHTML = html
-              document.getElementById('quotationsList').style.display = 'block'
-              resultDiv.innerHTML = `<div class="result success">Test successful! Found ${data.count} quotations.</div>`
+              document.getElementById('quotationsList').innerHTML = html;
+              document.getElementById('quotationsList').style.display = 'block';
+              resultDiv.innerHTML = `<div class="result success">Test successful! Found ${data.count} quotations.</div>`;
             } else {
-              resultDiv.innerHTML = '<div class="result error">No quotations found in test.</div>'
+              resultDiv.innerHTML =
+                '<div class="result error">No quotations found in test.</div>';
             }
           } else {
-            const errorText = await response.text()
-            console.error('Test error response:', errorText)
-            resultDiv.innerHTML = `<div class="result error">Test failed. Status: ${response.status}</div>`
+            const errorText = await response.text();
+            console.error('Test error response:', errorText);
+            resultDiv.innerHTML = `<div class="result error">Test failed. Status: ${response.status}</div>`;
           }
         } catch (error) {
-          console.error('Test error:', error)
+          console.error('Test error:', error);
           resultDiv.innerHTML =
-            '<div class="result error">Test failed. Please check the console for details.</div>'
+            '<div class="result error">Test failed. Please check the console for details.</div>';
         }
       }
 
       function selectQuotation(id, quotationNumber) {
-        document.getElementById('quotationId').value = id
+        document.getElementById('quotationId').value = id;
         document.getElementById('result').innerHTML =
-          `<div class="result success">Selected quotation: ${quotationNumber}</div>`
+          `<div class="result success">Selected quotation: ${quotationNumber}</div>`;
       }
 
       async function generatePDF() {
-        const quotationId = document.getElementById('quotationId').value
-        const resultDiv = document.getElementById('result')
+        const quotationId = document.getElementById('quotationId').value;
+        const resultDiv = document.getElementById('result');
 
         if (!quotationId) {
-          resultDiv.innerHTML = '<div class="result error">Please enter a quotation ID</div>'
-          return
+          resultDiv.innerHTML =
+            '<div class="result error">Please enter a quotation ID</div>';
+          return;
         }
 
-
         try {
-          resultDiv.innerHTML = '<div class="result">Generating PDF...</div>'
+          resultDiv.innerHTML = '<div class="result">Generating PDF...</div>';
 
-          const response = await fetch(`/api/quotations/${quotationId}/generate-pdf`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          })
-
+          const response = await fetch(
+            `/api/quotations/${quotationId}/generate-pdf`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
 
           if (response.ok) {
-            const data = await response.json()
+            const data = await response.json();
 
             // Download the PDF
             if (data.pdfUrl) {
-              const link = document.createElement('a')
-              link.href = data.pdfUrl
-              link.download = `quotation-${data.quotationNumber}.pdf`
-              link.target = '_blank'
-              document.body.appendChild(link)
-              link.click()
-              document.body.removeChild(link)
+              const link = document.createElement('a');
+              link.href = data.pdfUrl;
+              link.download = `quotation-${data.quotationNumber}.pdf`;
+              link.target = '_blank';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
 
-              resultDiv.innerHTML = `<div class="result success">PDF generated and downloaded successfully!<br>Quotation Number: ${data.quotationNumber}</div>`
+              resultDiv.innerHTML = `<div class="result success">PDF generated and downloaded successfully!<br>Quotation Number: ${data.quotationNumber}</div>`;
             } else {
-              resultDiv.innerHTML = `<div class="result error">PDF generated but no download URL provided</div>`
+              resultDiv.innerHTML = `<div class="result error">PDF generated but no download URL provided</div>`;
             }
           } else {
-            const error = await response.json()
-            console.error('Server error details:', error)
-            resultDiv.innerHTML = `<div class="result error">Error: ${error.message || 'Failed to generate PDF'}<br>Details: ${error.details || error.error || 'No details available'}</div>`
+            const error = await response.json();
+            console.error('Server error details:', error);
+            resultDiv.innerHTML = `<div class="result error">Error: ${error.message || 'Failed to generate PDF'}<br>Details: ${error.details || error.error || 'No details available'}</div>`;
           }
         } catch (error) {
-          console.error('Error:', error)
+          console.error('Error:', error);
           resultDiv.innerHTML =
-            '<div class="result error">Failed to generate PDF. Please check the console for details.</div>'
+            '<div class="result error">Failed to generate PDF. Please check the console for details.</div>';
         }
       }
     </script>

@@ -172,6 +172,10 @@ export interface Scope {
   } | null;
   receivedDate?: string | null;
   createdBy?: (number | null) | User;
+  /**
+   * Click the button below to create a new evaluation for this scope
+   */
+  createEvaluation?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -381,6 +385,18 @@ export interface Evaluation {
    */
   scopeCode?: string | null;
   /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
+  /**
    * Current status of the evaluation
    */
   status: 'pending' | 'done' | 'notDone';
@@ -397,6 +413,10 @@ export interface Evaluation {
   estimatedDuration?: number | null;
   evaluatedBy?: (number | null) | User;
   notes?: string | null;
+  /**
+   * Click the button below to create a new quotation for this evaluation
+   */
+  createQuotation?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -410,6 +430,22 @@ export interface Quotation {
   id: number;
   quotationNumber: string;
   scope: number | Scope;
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
   /**
    * Select an evaluation that belongs to the selected scope. The dropdown will show all evaluations, but only scope-related ones are valid.
    */
@@ -430,6 +466,10 @@ export interface Quotation {
   quotationStatus: 'pending' | 'approved' | 'denied';
   notes?: string | null;
   createdBy?: (number | null) | User;
+  /**
+   * Click the button below to create a new invoice for this quotation
+   */
+  createInvoice?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -443,6 +483,22 @@ export interface Invoice {
   id: number;
   invoiceNumber: string;
   scope: number | Scope;
+  /**
+   * Scope code (auto-populated from scope relationship)
+   */
+  scopeCode?: string | null;
+  /**
+   * Scope name (auto-populated from scope relationship)
+   */
+  scopeName?: string | null;
+  /**
+   * Model number (auto-populated from scope relationship)
+   */
+  modelNumber?: string | null;
+  /**
+   * Serial number (auto-populated from scope relationship)
+   */
+  serialNumber?: string | null;
   repair?: (number | null) | Repair;
   quotation?: (number | null) | Quotation;
   invoiceDate?: string | null;
@@ -623,6 +679,7 @@ export interface ScopesSelect<T extends boolean = true> {
   description?: T;
   receivedDate?: T;
   createdBy?: T;
+  createEvaluation?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -683,6 +740,9 @@ export interface EvaluationSelect<T extends boolean = true> {
   evaluationNumber?: T;
   scope?: T;
   scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   status?: T;
   evaluationDate?: T;
   problemsIdentified?: T;
@@ -691,6 +751,7 @@ export interface EvaluationSelect<T extends boolean = true> {
   estimatedDuration?: T;
   evaluatedBy?: T;
   notes?: T;
+  createQuotation?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -701,6 +762,10 @@ export interface EvaluationSelect<T extends boolean = true> {
 export interface QuotationSelect<T extends boolean = true> {
   quotationNumber?: T;
   scope?: T;
+  scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   evaluation?: T;
   quotationDate?: T;
   offerValidity?: T;
@@ -712,6 +777,7 @@ export interface QuotationSelect<T extends boolean = true> {
   quotationStatus?: T;
   notes?: T;
   createdBy?: T;
+  createInvoice?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -722,6 +788,10 @@ export interface QuotationSelect<T extends boolean = true> {
 export interface InvoicesSelect<T extends boolean = true> {
   invoiceNumber?: T;
   scope?: T;
+  scopeCode?: T;
+  scopeName?: T;
+  modelNumber?: T;
+  serialNumber?: T;
   repair?: T;
   quotation?: T;
   invoiceDate?: T;

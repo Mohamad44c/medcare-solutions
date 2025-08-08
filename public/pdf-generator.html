@@ -13,8 +13,8 @@
 
       body {
         font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-          sans-serif;
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
         padding: 20px;
@@ -316,69 +316,75 @@
         </div>
 
         <div id="result"></div>
-        <div id="quotationsList" class="quotations-list" style="display: none"></div>
+        <div
+          id="quotationsList"
+          class="quotations-list"
+          style="display: none"
+        ></div>
       </div>
     </div>
 
     <script>
-      let isLoading = false
-      let currentDocumentType = 'quotation'
+      let isLoading = false;
+      let currentDocumentType = 'quotation';
 
       function onDocumentTypeChange() {
-        currentDocumentType = document.getElementById('documentType').value
-        clearResults()
-        fetchDocuments()
+        currentDocumentType = document.getElementById('documentType').value;
+        clearResults();
+        fetchDocuments();
       }
 
       function setLoading(buttonId, loading) {
-        const button = document.getElementById(buttonId)
-        if (!button) return
+        const button = document.getElementById(buttonId);
+        if (!button) return;
 
         if (loading) {
           // Store original text if not already stored
           if (!button.dataset.originalText) {
-            button.dataset.originalText = button.innerHTML
+            button.dataset.originalText = button.innerHTML;
           }
-          button.innerHTML = `<span class="loading"></span> Loading...`
-          button.disabled = true
+          button.innerHTML = `<span class="loading"></span> Loading...`;
+          button.disabled = true;
         } else {
           // Restore original text
-          const originalText = button.dataset.originalText || button.innerHTML
-          button.innerHTML = originalText
-          button.disabled = false
+          const originalText = button.dataset.originalText || button.innerHTML;
+          button.innerHTML = originalText;
+          button.disabled = false;
         }
       }
 
       function showResult(message, type = 'info') {
-        const resultDiv = document.getElementById('result')
-        resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
       }
 
       async function fetchDocuments() {
-        const documentsListDiv = document.getElementById('quotationsList')
-        setLoading('loadBtn', true)
+        const documentsListDiv = document.getElementById('quotationsList');
+        setLoading('loadBtn', true);
 
         try {
           const endpoint =
             currentDocumentType === 'quotation'
               ? '/api/quotations?limit=20'
-              : '/api/invoices?limit=20'
-          showResult(`Loading ${currentDocumentType}s...`, 'info')
+              : '/api/invoices?limit=20';
+          showResult(`Loading ${currentDocumentType}s...`, 'info');
 
           const response = await fetch(endpoint, {
             signal: AbortSignal.timeout(10000), // 10 second timeout
-          })
-          console.log('Response status:', response.status)
+          });
+          console.log('Response status:', response.status);
 
           if (response.ok) {
-            const data = await response.json()
-            console.log(`${currentDocumentType}s data:`, data)
+            const data = await response.json();
+            console.log(`${currentDocumentType}s data:`, data);
 
             if (data.docs && data.docs.length > 0) {
-              let html = `<h3>📋 Available ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)}s:</h3>`
-              data.docs.forEach((doc) => {
+              let html = `<h3>📋 Available ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)}s:</h3>`;
+              data.docs.forEach(doc => {
                 const number =
-                  currentDocumentType === 'quotation' ? doc.quotation_number : doc.invoiceNumber
+                  currentDocumentType === 'quotation'
+                    ? doc.quotationNumber
+                    : doc.invoiceNumber;
                 const price =
                   currentDocumentType === 'quotation'
                     ? doc.price
@@ -386,10 +392,13 @@
                       : 'No price'
                     : doc.totalDue
                       ? `$${doc.totalDue}`
-                      : 'No total'
-                const scope = doc.scope?.name || 'No scope'
-                const created = new Date(doc.createdAt).toLocaleDateString()
-                const status = currentDocumentType === 'invoice' ? ` | Status: ${doc.status}` : ''
+                      : 'No total';
+                const scope = doc.scope?.name || 'No scope';
+                const created = new Date(doc.createdAt).toLocaleDateString();
+                const status =
+                  currentDocumentType === 'invoice'
+                    ? ` | Status: ${doc.status}`
+                    : '';
 
                 html += `
                   <div class="quotation-item" onclick="selectDocument('${doc.id}', '${number}')">
@@ -398,135 +407,146 @@
                       Scope: ${scope} | ${currentDocumentType === 'quotation' ? 'Price' : 'Total'}: ${price} | Created: ${created}${status}
                     </div>
                   </div>
-                `
-              })
+                `;
+              });
 
-              documentsListDiv.innerHTML = html
-              documentsListDiv.style.display = 'block'
+              documentsListDiv.innerHTML = html;
+              documentsListDiv.style.display = 'block';
               showResult(
                 `✅ Successfully loaded ${data.docs.length} ${currentDocumentType}s!`,
-                'success',
-              )
+                'success'
+              );
 
               // Update stats
               if (currentDocumentType === 'quotation') {
                 document.getElementById('totalQuotations').textContent =
-                  data.totalDocs || data.docs.length
+                  data.totalDocs || data.docs.length;
               } else {
                 document.getElementById('totalInvoices').textContent =
-                  data.totalDocs || data.docs.length
+                  data.totalDocs || data.docs.length;
               }
             } else {
               showResult(
                 `❌ No ${currentDocumentType}s found. Please create a ${currentDocumentType} first.`,
-                'error',
-              )
+                'error'
+              );
             }
           } else {
-            const errorText = await response.text()
-            console.error('Error response:', errorText)
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
             showResult(
               `❌ Failed to load ${currentDocumentType}s. Status: ${response.status}`,
-              'error',
-            )
+              'error'
+            );
           }
         } catch (error) {
-          console.error('Error:', error)
+          console.error('Error:', error);
           showResult(
             `❌ Failed to load ${currentDocumentType}s. Please check the console for details.`,
-            'error',
-          )
+            'error'
+          );
         } finally {
-          setLoading('loadBtn', false)
+          setLoading('loadBtn', false);
         }
       }
 
       function selectDocument(id, number) {
-        document.getElementById('documentId').value = id
-        showResult(`✅ Selected ${currentDocumentType}: ${number}`, 'success')
+        document.getElementById('documentId').value = id;
+        showResult(`✅ Selected ${currentDocumentType}: ${number}`, 'success');
       }
 
       async function generatePDF() {
-        const documentId = document.getElementById('documentId').value
+        const documentId = document.getElementById('documentId').value;
 
         if (!documentId) {
           showResult(
             `❌ Please enter a ${currentDocumentType} ID or select one from the list`,
-            'error',
-          )
-          return
+            'error'
+          );
+          return;
         }
 
-        setLoading('generateBtn', true)
+        setLoading('generateBtn', true);
 
         try {
-          showResult('🔄 Generating PDF...', 'info')
+          showResult('🔄 Generating PDF...', 'info');
 
           const endpoint =
             currentDocumentType === 'quotation'
               ? `/api/quotations/${documentId}/generate-pdf`
-              : `/api/invoices/${documentId}/generate-pdf`
+              : `/api/invoices/${documentId}/generate-pdf`;
           const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-          })
+          });
 
           if (response.ok) {
-            const data = await response.json()
+            const data = await response.json();
 
             // Download the PDF
             if (data.pdfUrl) {
-              const link = document.createElement('a')
-              link.href = data.pdfUrl
+              const link = document.createElement('a');
+              link.href = data.pdfUrl;
               const number =
-                currentDocumentType === 'quotation' ? data.quotationNumber : data.invoiceNumber
-              link.download = `${currentDocumentType}-${number}.pdf`
-              link.target = '_blank'
-              document.body.appendChild(link)
-              link.click()
-              document.body.removeChild(link)
+                currentDocumentType === 'quotation'
+                  ? data.quotationNumber
+                  : data.invoiceNumber;
+              link.download = `${currentDocumentType}-${number}.pdf`;
+              link.target = '_blank';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
 
               showResult(
                 `✅ PDF generated and downloaded successfully!<br>📄 ${currentDocumentType.charAt(0).toUpperCase() + currentDocumentType.slice(1)} Number: ${number}`,
-                'success',
-              )
+                'success'
+              );
 
               // Update stats
               const currentCount =
-                parseInt(document.getElementById('generatedPDFs').textContent) || 0
-              document.getElementById('generatedPDFs').textContent = currentCount + 1
+                parseInt(
+                  document.getElementById('generatedPDFs').textContent
+                ) || 0;
+              document.getElementById('generatedPDFs').textContent =
+                currentCount + 1;
             } else {
-              showResult('❌ PDF generated but no download URL provided', 'error')
+              showResult(
+                '❌ PDF generated but no download URL provided',
+                'error'
+              );
             }
           } else {
-            const error = await response.json()
-            console.error('Server error details:', error)
+            const error = await response.json();
+            console.error('Server error details:', error);
             showResult(
               `❌ Error: ${error.message || 'Failed to generate PDF'}<br>Details: ${error.details || error.error || 'No details available'}`,
-              'error',
-            )
+              'error'
+            );
           }
         } catch (error) {
-          console.error('Error:', error)
-          showResult('❌ Failed to generate PDF. Please check the console for details.', 'error')
+          console.error('Error:', error);
+          showResult(
+            '❌ Failed to generate PDF. Please check the console for details.',
+            'error'
+          );
         } finally {
-          setLoading('generateBtn', false)
+          setLoading('generateBtn', false);
         }
       }
 
       function clearResults() {
-        document.getElementById('result').innerHTML = ''
-        document.getElementById('quotationsList').style.display = 'none'
-        document.getElementById('documentId').value = ''
-        showResult('🧹 Results cleared!', 'info')
+        document.getElementById('result').innerHTML = '';
+        document.getElementById('quotationsList').style.display = 'none';
+        document.getElementById('documentId').value = '';
+        showResult('🧹 Results cleared!', 'info');
       }
 
       // Auto-load documents on page load
       window.addEventListener('load', () => {
-        fetchDocuments()
-      })
+        fetchDocuments();
+      });
     </script>
   </body>
 </html>

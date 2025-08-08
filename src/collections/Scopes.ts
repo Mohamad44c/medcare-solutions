@@ -19,7 +19,15 @@ export const Scopes: CollectionConfig = {
   slug: 'scopes',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['code', 'name', 'type', 'status'],
+    defaultColumns: [
+      'code',
+      'name',
+      'type',
+      'status',
+      'company',
+      'modelNumber',
+      'serialNumber',
+    ],
     group: 'Operations',
     description:
       'Core workflow stages involved in handling service requests, from initial scoping to final invoicing.',
@@ -139,9 +147,22 @@ export const Scopes: CollectionConfig = {
           relationTo: 'users',
           admin: {
             readOnly: true,
+            position: 'sidebar',
           },
           access: {
             update: () => false,
+          },
+        },
+        {
+          name: 'createEvaluation',
+          type: 'text',
+          admin: {
+            position: 'sidebar',
+            description:
+              'Click the button below to create a new evaluation for this scope',
+            components: {
+              Field: 'CreateEvaluationField#default',
+            },
           },
         },
       ],

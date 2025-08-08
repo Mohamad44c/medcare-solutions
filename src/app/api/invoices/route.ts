@@ -12,20 +12,20 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const page = parseInt(searchParams.get('page') || '1');
 
-    const quotations = await payload.find({
-      collection: 'quotation',
+    const invoices = await payload.find({
+      collection: 'invoices',
       limit,
       page,
-      depth: 1, // Include basic scope info
+      depth: 1,
     });
 
-    return NextResponse.json(quotations);
+    return NextResponse.json(invoices);
   } catch (error) {
-    console.error('Error fetching quotations:', error);
+    console.error('Error fetching invoices:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to fetch quotations',
+        message: 'Failed to fetch invoices',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
@@ -41,22 +41,22 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Create the quotation
-    const quotation = await payload.create({
-      collection: 'quotation',
+    // Create the invoice
+    const invoice = await payload.create({
+      collection: 'invoices',
       data: body,
     });
 
     return NextResponse.json({
       success: true,
-      doc: quotation,
+      doc: invoice,
     });
   } catch (error) {
-    console.error('Error creating quotation:', error);
+    console.error('Error creating invoice:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to create quotation',
+        message: 'Failed to create invoice',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

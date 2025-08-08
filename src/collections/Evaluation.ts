@@ -8,6 +8,8 @@ export const Evaluation: CollectionConfig = {
       'evaluationNumber',
       'scope',
       'scopeCode',
+      'modelNumber',
+      'serialNumber',
       'status',
       'createdAt',
     ],
@@ -101,13 +103,6 @@ export const Evaluation: CollectionConfig = {
     {
       name: 'recommendedActions',
       type: 'textarea',
-    },
-    {
-      name: 'estimatedCost',
-      type: 'number',
-      admin: {
-        description: 'Customer does not see this',
-      },
     },
     {
       name: 'estimatedDuration',

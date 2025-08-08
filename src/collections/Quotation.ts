@@ -7,6 +7,9 @@ export const Quotation: CollectionConfig = {
     defaultColumns: [
       'quotationNumber',
       'scope',
+      'scopeCode',
+      'modelNumber',
+      'serialNumber',
       'quotationStatus',
       'price',
       'createdAt',

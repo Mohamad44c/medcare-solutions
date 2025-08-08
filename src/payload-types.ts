@@ -404,10 +404,6 @@ export interface Evaluation {
   problemsIdentified: string;
   recommendedActions?: string | null;
   /**
-   * Customer does not see this
-   */
-  estimatedCost?: number | null;
-  /**
    * Estimated repair duration in days
    */
   estimatedDuration?: number | null;
@@ -747,7 +743,6 @@ export interface EvaluationSelect<T extends boolean = true> {
   evaluationDate?: T;
   problemsIdentified?: T;
   recommendedActions?: T;
-  estimatedCost?: T;
   estimatedDuration?: T;
   evaluatedBy?: T;
   notes?: T;

@@ -7,6 +7,9 @@ export const Invoices: CollectionConfig = {
     defaultColumns: [
       'invoiceNumber',
       'scope',
+      'scopeCode',
+      'modelNumber',
+      'serialNumber',
       'status',
       'totalDue',
       'createdAt',

@@ -1,6 +1,6 @@
+import puppeteer from 'puppeteer';
 import path from 'path';
 
-import puppeteer, { Viewport } from 'puppeteer-core';
 // Types
 interface QuotationData {
   quotationNumber: string;
@@ -658,88 +658,30 @@ export class PDFGenerator {
    * Generate PDF from HTML using Puppeteer
    */
   private static async generatePDFFromHTML(html: string): Promise<Buffer> {
-    const puppeteer = await import('puppeteer-core');
-    type PuppeteerViewport = {
-      width: number;
-      height: number;
-      deviceScaleFactor?: number;
-      isMobile?: boolean;
-      hasTouch?: boolean;
-      isLandscape?: boolean;
-    };
-
-    let executablePath: string | undefined;
-    let args: string[] = [];
-    let defaultViewport: PuppeteerViewport | null = null;
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
 
     try {
-      if (process.env.NODE_ENV === 'production') {
-        // Dynamically import only in production
-        // @ts-ignore - @sparticuz/chromium types are not available
-        const chromium = await import('@sparticuz/chromium');
-        args = chromium.args;
-        defaultViewport = {
-          width: 1920,
-          height: 1080,
-          deviceScaleFactor: 1,
-        };
-        executablePath = await chromium.executablePath();
-      } else {
-        // Auto-detect Chrome path in development
-        const findChromePath = async () => {
-          try {
-            // Try to find Chrome in common locations
-            const installations = await puppeteer.default.executablePath();
-            return installations;
-          } catch (error) {
-            console.error('Failed to find Chrome:', error);
-            return undefined;
-          }
-        };
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
 
-        executablePath = await findChromePath();
-
-        if (!executablePath) {
-          throw new Error(
-            'Could not find Chrome installation in development mode'
-          );
-        }
-      }
-
-      const browser = await puppeteer.launch({
-        args,
-        defaultViewport,
-        executablePath,
-        headless: true, // Use headless mode
+      const pdf = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '15mm',
+          right: '15mm',
+          bottom: '15mm',
+          left: '15mm',
+        },
+        printBackground: true,
       });
 
-      try {
-        const page = await browser.newPage();
-        await page.setContent(html, {
-          waitUntil: ['networkidle0', 'load', 'domcontentloaded'],
-          timeout: 30000,
-        });
-
-        const pdf = await page.pdf({
-          format: 'A4',
-          margin: {
-            top: '15mm',
-            right: '15mm',
-            bottom: '15mm',
-            left: '15mm',
-          },
-          printBackground: true,
-        });
-
-        return Buffer.from(pdf);
-      } finally {
-        await browser.close();
-      }
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      throw new Error(
-        `Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      return Buffer.from(pdf);
+    } finally {
+      await browser.close();
     }
   }
 

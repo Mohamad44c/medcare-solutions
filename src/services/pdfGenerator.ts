@@ -1,8 +1,19 @@
-import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+import jsPDF from 'jspdf';
 import path from 'path';
+import fs from 'fs/promises';
+// Add the polyfill for Node.js environment
+import { JSDOM } from 'jsdom';
+import { createCanvas } from 'canvas';
 
-// Types
+// Polyfill for document and window in Node.js
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+global.window = dom.window as any;
+global.document = dom.window.document;
+global.HTMLCanvasElement = dom.window.HTMLCanvasElement;
+global.HTMLImageElement = dom.window.HTMLImageElement;
+global.Image = dom.window.Image;
+
+// Types (same as before)
 interface QuotationData {
   quotationNumber: string;
   quotationDate: string;
@@ -66,12 +77,6 @@ const DEFAULT_LOGO_PATH = path.join(
   'public',
   'assets',
   'mcs-logo.png'
-);
-const DEFAULT_WHATSAPP_LOGO_PATH = path.join(
-  process.cwd(),
-  'public',
-  'assets',
-  'whatsapp.png'
 );
 
 export class PDFGenerator {
@@ -201,7 +206,6 @@ export class PDFGenerator {
    */
   private static async loadImageAsBase64(filePath: string): Promise<string> {
     try {
-      const fs = await import('fs/promises');
       const buffer = await fs.readFile(filePath);
       return buffer.toString('base64');
     } catch (error) {
@@ -211,505 +215,106 @@ export class PDFGenerator {
   }
 
   /**
-   * Get company logo as base64
+   * Add logo to PDF
    */
-  private static async getLogoBase64(): Promise<string> {
-    return this.loadImageAsBase64(DEFAULT_LOGO_PATH);
-  }
-
-  /**
-   * Get WhatsApp logo as base64
-   */
-  private static async getWhatsappLogoBase64(): Promise<string> {
-    return this.loadImageAsBase64(DEFAULT_WHATSAPP_LOGO_PATH);
-  }
-
-  /**
-   * Generate quotation HTML template
-   */
-  private static async generateQuotationHTML(
-    data: QuotationData
-  ): Promise<string> {
-    const logoBase64 = await this.getLogoBase64();
-    const whatsappLogoBase64 = await this.getWhatsappLogoBase64();
-
-    return `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quotation ${data.quotationNumber}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-          }
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-          }
-          .company-info {
-            display: flex;
-            align-items: center;
-          }
-          .logo {
-            width: 100px;
-            height: 100px;
-            margin-right: 20px;
-            object-fit: contain;
-          }
-          .contact-info {
-            line-height: 1.4;
-          }
-          .quotation-title {
-            text-align: right;
-          }
-          .quotation-title h1 {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0 0 10px 0;
-            color: #258bd1 !important;
-          }
-          .quotation-details {
-            font-size: 14px;
-            line-height: 1.6;
-          }
-          .client-info {
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #063970;
-          }
-          .client-info strong {
-            color: #063970;
-          }
-          .heading {
-            color: #258bd1 !important;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-          }
-          th {
-            background-color: #258bd1;
-            font-weight: bold;
-            color: white;
-          }
-          .price-table th:last-child,
-          .price-table td:last-child {
-            text-align: right;
-          }
-          .total-row {
-            background-color: #f8f9fa;
-            font-weight: bold;
-          }
-          .problems-cell {
-            white-space: pre-line;
-            line-height: 1.4;
-          }
-          .terms-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-          }
-          .terms-section h3 {
-            margin-top: 0;
-            color: #258bd1 !important;
-          }
-          .whatsapp-logo {
-            width: 30px;
-            height: 30px;
-            margin-left: 10px;
-            object-fit: contain;
-          }
-          .whatsapp-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company-info">
-            <img src="data:image/png;base64,${logoBase64}" alt="MCS Logo" class="logo">
-            <div class="contact-info">
-              <div>Beirut Lebanon</div>
-              <div>+961 03 788345</div>
-              <div class="whatsapp-row">
-                <span>+961 70 072401</span>
-                <img src="data:image/png;base64,${whatsappLogoBase64}" alt="Whatsapp Logo" class="whatsapp-logo">
-              </div>
-              <div>info@mcs.com</div>
-            </div>
-          </div>
-          <div class="quotation-title">
-            <h1 class="heading">QUOTATION</h1>
-            <div class="quotation-details">
-              <div><strong>Quotation#:</strong> ${data.quotationNumber}</div>
-              <div><strong>Sales Person:</strong> MCS Sales</div>
-              <div><strong>Offer Validity:</strong> ${this.formatDate(data.offerValidity)}</div>
-              <div><strong>Date:</strong> ${this.formatDate(data.quotationDate)}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="client-info">
-          <strong>To:</strong> ${data.scope.company.name}<br>
-          <strong>Phone:</strong> ${data.scope.company.phone || 'N/A'}<br>
-          <strong>Location:</strong> ${data.scope.company.address || 'N/A'}
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Make</th>
-              <th>Model #</th>
-              <th>Serial #</th>
-              <th>Date Received</th>
-              <th>Delivery Period</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${data.scope.name}</td>
-              <td>${data.scope.brand?.title || 'N/A'}</td>
-              <td>${data.scope.modelNumber}</td>
-              <td>${data.scope.serialNumber}</td>
-              <td>${this.formatDate(data.scope.receivedDate)}</td>
-              <td>${data.deliveryPeriod || 0} days</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <table class="price-table">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th>Unit Price</th>
-              <th>Total Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="problems-cell">${data.serviceType} - ${data.problems.replace(/\n/g, '<br>')}</td>
-              <td>$${data.price.toFixed(2)}</td>
-              <td>$${data.price.toFixed(2)}</td>
-            </tr>
-            ${
-              data.discount > 0
-                ? `
-            <tr>
-              <td>Discount</td>
-              <td>-$${data.discount.toFixed(2)}</td>
-              <td>-$${data.discount.toFixed(2)}</td>
-            </tr>
-            `
-                : ''
-            }
-            <tr class="total-row">
-              <td colspan="2"><strong>Total</strong></td>
-              <td><strong>$${(data.price - data.discount).toFixed(2)}</strong></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="terms-section">
-          <h3 class="heading">Payment Terms and Conditions</h3>
-          <p>- The payment is to 100% upon delivery</p>
-          <p>- The payment is to be in Cash USD </p>
-          <p>- Repair time frame: ${data.deliveryPeriod || 0} days after confirmation</p>
-          <p>- TVA will be added to the total amount</p>
-          <p>- Above equipment is covered with 3 months limited warranty</p>
-          <p>- Price terms at customer's site</p>
-        </div>
-      </body>
-      </html>
-    `;
-  }
-
-  /**
-   * Generate invoice HTML template
-   */
-  private static async generateInvoiceHTML(data: InvoiceData): Promise<string> {
-    const logoBase64 = await this.getLogoBase64();
-    const whatsappLogoBase64 = await this.getWhatsappLogoBase64();
-    const dollarRate = data.dollarRate || DEFAULT_DOLLAR_RATE;
-
-    return `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Invoice ${data.invoiceNumber}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-          }
-          .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-          }
-          .company-info {
-            display: flex;
-            align-items: center;
-          }
-          .logo {
-            width: 100px;
-            height: 100px;
-            margin-right: 20px;
-            object-fit: contain;
-          }
-          .contact-info {
-            line-height: 1.4;
-          }
-          .invoice-title {
-            text-align: right;
-          }
-          .invoice-title h1 {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0 0 10px 0;
-            color: #258bd1 !important;
-          }
-          .invoice-details {
-            font-size: 14px;
-            line-height: 1.6;
-          }
-          .client-info {
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #063970;
-          }
-          .client-info strong {
-            color: #063970;
-          }
-          .heading {
-            color: #258bd1 !important;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-          }
-          th {
-            background-color: #258bd1;
-            font-weight: bold;
-            color: white;
-          }
-          .price-table th:last-child,
-          .price-table td:last-child {
-            text-align: right;
-          }
-          .total-row {
-            background-color: #f8f9fa;
-            font-weight: bold;
-          }
-          .problems-cell {
-            white-space: pre-line;
-            line-height: 1.4;
-          }
-          .terms-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-          }
-          .terms-section h3 {
-            margin-top: 0;
-            color: #258bd1 !important;
-          }
-          .whatsapp-logo {
-            width: 30px;
-            height: 30px;
-            margin-left: 10px;
-            object-fit: contain;
-          }
-          .whatsapp-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="company-info">
-            <img src="data:image/png;base64,${logoBase64}" alt="MCS Logo" class="logo">
-            <div class="contact-info">
-              <div>Beirut Lebanon</div>
-              <div>+961 03 788345</div>
-              <div class="whatsapp-row">
-                <span>+961 70 072401</span>
-                <img src="data:image/png;base64,${whatsappLogoBase64}" alt="Whatsapp Logo" class="whatsapp-logo">
-              </div>
-              <div>info@mcs.com</div>
-            </div>
-          </div>
-          <div class="invoice-title">
-            <h1 class="heading">INVOICE</h1>
-            <div class="invoice-details">
-              <div><strong>Invoice#:</strong> ${data.invoiceNumber}</div>
-              <div><strong>MOF#:</strong> ${data.mofNumber}</div>
-              <div><strong>Date:</strong> ${this.formatDate(data.invoiceDate)}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="client-info">
-          <strong>To:</strong> ${data.scope.company.name}<br>
-          <strong>Phone:</strong> ${data.scope.company.phone || 'N/A'}<br>
-          <strong>Location:</strong> ${data.scope.company.address || 'N/A'}<br>
-          <strong>MOF#:</strong> ${data.scope.company.mofNumber || 'N/A'}
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Service</th>
-              <th>Sales Person</th>
-              <th>Shipped Via</th>
-              <th>Due Date</th>
-              <th>Payment Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${data.quotation?.serviceType || 'N/A'}</td>
-              <td>MCS Sales</td>
-              <td>MCS Endoscopy</td>
-              <td>${this.formatDate(data.dueDate)}</td>
-              <td>Pre-paid</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <table class="price-table">
-          <thead>
-            <tr>
-              <th>Manufacturer</th>
-              <th>Scope Name</th>
-              <th>Model #</th>
-              <th>Serial #</th>
-              <th>Unit Price</th>
-              <th>Total Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${data.scope.manufacturer?.title || 'N/A'}</td>
-              <td>${data.scope.name}</td>
-              <td>${data.scope.modelNumber}</td>
-              <td>${data.scope.serialNumber}</td>
-              <td>$${data.unitPrice.toFixed(2)}</td>
-              <td>$${data.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr class="total-row">
-              <td colspan="5"><strong>Subtotal</strong></td>
-              <td><strong>$${data.totalPrice.toFixed(2)}</strong></td>
-            </tr>
-            <tr class="total-row">
-              <td colspan="5"><strong>TVA (11%)</strong></td>
-              <td><strong>$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * dollarRate).toLocaleString()} LBP` : ''}</strong></td>
-            </tr>
-            <tr class="total-row">
-              <td colspan="5"><strong>Total Due</strong></td>
-              <td><strong>$${data.totalDue.toFixed(2)}</strong></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="terms-section">
-          <h3 class="heading">Payment Terms and Conditions</h3>
-          <p>- Cash on Delivery</p>
-          <p>- TVA Syrafa Rate: $1 = ${dollarRate.toLocaleString()} LBP</p>
-          <p>- Total Amount Due: ${this.numberToWords(data.totalDue)}</p>
-        </div>
-      </body>
-      </html>
-    `;
-  }
-
-  /**
-   * Generate PDF from HTML using Puppeteer
-   */
-  private static async generatePDFFromHTML(html: string): Promise<Buffer> {
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    let browser;
-
+  private static async addLogo(
+    doc: jsPDF,
+    x: number,
+    y: number
+  ): Promise<void> {
     try {
-      if (isProduction) {
-        // Vercel production environment
-        browser = await puppeteer.launch({
-          args: chromium.args,
-          defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath,
-          headless: chromium.headless,
-        });
-      } else {
-        // Local development environment
-        browser = await puppeteer.launch({
-          headless: true,
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-web-security',
-          ],
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-        });
+      const logoBase64 = await this.loadImageAsBase64(DEFAULT_LOGO_PATH);
+      if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', x, y, 30, 30);
+      }
+    } catch (error) {
+      console.warn('Could not add logo to PDF:', error);
+    }
+  }
+
+  /**
+   * Add header with company info
+   */
+  private static async addHeader(doc: jsPDF, title: string): Promise<number> {
+    // Add logo
+    await this.addLogo(doc, 20, 15);
+
+    // Company info
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Beirut Lebanon', 55, 20);
+    doc.text('+961 03 788345', 55, 25);
+    doc.text('+961 70 072401 (WhatsApp)', 55, 30);
+    doc.text('info@mcs.com', 55, 35);
+
+    // Title
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(37, 139, 209); // #258bd1
+    doc.text(title, 150, 25);
+
+    return 50; // Return Y position for next content
+  }
+
+  /**
+   * Add table to PDF
+   */
+  private static addTable(
+    doc: jsPDF,
+    startY: number,
+    headers: string[],
+    rows: string[][],
+    options?: {
+      headerColor?: [number, number, number];
+      fontSize?: number;
+    }
+  ): number {
+    const { headerColor = [37, 139, 209], fontSize = 9 } = options || {};
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const tableWidth = pageWidth - 2 * margin;
+    const colWidth = tableWidth / headers.length;
+
+    let currentY = startY;
+
+    // Header
+    doc.setFillColor(...headerColor);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(fontSize);
+
+    doc.rect(margin, currentY, tableWidth, 8, 'F');
+    headers.forEach((header, i) => {
+      doc.text(header, margin + i * colWidth + 2, currentY + 6);
+    });
+
+    currentY += 8;
+
+    // Rows
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+
+    rows.forEach((row, rowIndex) => {
+      if (rowIndex % 2 === 0) {
+        doc.setFillColor(248, 249, 250);
+        doc.rect(margin, currentY, tableWidth, 8, 'F');
       }
 
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-
-      const pdf = await page.pdf({
-        format: 'a4',
-        margin: {
-          top: '15mm',
-          right: '15mm',
-          bottom: '15mm',
-          left: '15mm',
-        },
-        printBackground: true,
+      row.forEach((cell, i) => {
+        // Handle long text by wrapping
+        const cellText =
+          cell.length > 25 ? cell.substring(0, 22) + '...' : cell;
+        doc.text(cellText, margin + i * colWidth + 2, currentY + 6);
       });
 
-      return Buffer.from(pdf);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      throw error;
-    } finally {
-      if (browser) {
-        await browser.close();
-      }
-    }
+      currentY += 8;
+    });
+
+    // Table border
+    doc.setDrawColor(221, 221, 221);
+    doc.rect(margin, startY, tableWidth, currentY - startY);
+
+    return currentY + 10;
   }
 
   /**
@@ -718,15 +323,279 @@ export class PDFGenerator {
   public static async generateQuotationPDF(
     data: QuotationData
   ): Promise<Buffer> {
-    const html = await this.generateQuotationHTML(data);
-    return this.generatePDFFromHTML(html);
+    const doc = new jsPDF();
+
+    try {
+      // Header
+      let currentY = await this.addHeader(doc, 'QUOTATION');
+
+      // Quotation details
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+
+      const detailsStartX = 150;
+      doc.text(
+        `Quotation#: ${data.quotationNumber}`,
+        detailsStartX,
+        currentY - 15
+      );
+      doc.text(`Sales Person: MCS Sales`, detailsStartX, currentY - 10);
+      doc.text(
+        `Offer Validity: ${this.formatDate(data.offerValidity)}`,
+        detailsStartX,
+        currentY - 5
+      );
+      doc.text(
+        `Date: ${this.formatDate(data.quotationDate)}`,
+        detailsStartX,
+        currentY
+      );
+
+      currentY += 10;
+
+      // Client info box
+      doc.setFillColor(248, 249, 250);
+      doc.rect(20, currentY, 170, 20, 'F');
+      doc.setDrawColor(6, 57, 112);
+      doc.setLineWidth(2);
+      doc.line(20, currentY, 20, currentY + 20);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(6, 57, 112);
+      doc.text('To:', 25, currentY + 8);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${data.scope.company.name}`, 35, currentY + 8);
+      doc.text(
+        `Phone: ${data.scope.company.phone || 'N/A'}`,
+        25,
+        currentY + 13
+      );
+      doc.text(
+        `Location: ${data.scope.company.address || 'N/A'}`,
+        25,
+        currentY + 18
+      );
+
+      currentY += 30;
+
+      // Equipment table
+      const equipmentHeaders = [
+        'Name',
+        'Make',
+        'Model #',
+        'Serial #',
+        'Date Received',
+        'Delivery Period',
+      ];
+      const equipmentRows = [
+        [
+          data.scope.name,
+          data.scope.brand?.title || 'N/A',
+          data.scope.modelNumber,
+          data.scope.serialNumber,
+          this.formatDate(data.scope.receivedDate),
+          `${data.deliveryPeriod || 0} days`,
+        ],
+      ];
+
+      currentY = this.addTable(doc, currentY, equipmentHeaders, equipmentRows);
+
+      // Price table
+      const priceHeaders = ['Description', 'Unit Price', 'Total Price'];
+      const priceRows = [
+        [
+          `${data.serviceType} - ${data.problems.substring(0, 50)}${data.problems.length > 50 ? '...' : ''}`,
+          `$${data.price.toFixed(2)}`,
+          `$${data.price.toFixed(2)}`,
+        ],
+      ];
+
+      if (data.discount > 0) {
+        priceRows.push([
+          'Discount',
+          `-$${data.discount.toFixed(2)}`,
+          `-$${data.discount.toFixed(2)}`,
+        ]);
+      }
+
+      priceRows.push([
+        'TOTAL',
+        '',
+        `$${(data.price - data.discount).toFixed(2)}`,
+      ]);
+
+      currentY = this.addTable(doc, currentY, priceHeaders, priceRows);
+
+      // Terms and conditions
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(37, 139, 209);
+      doc.text('Payment Terms and Conditions', 20, currentY + 10);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const terms = [
+        '- The payment is to 100% upon delivery',
+        '- The payment is to be in Cash USD',
+        `- Repair time frame: ${data.deliveryPeriod || 0} days after confirmation`,
+        '- TVA will be added to the total amount',
+        '- Above equipment is covered with 3 months limited warranty',
+        "- Price terms at customer's site",
+      ];
+
+      if (data.notes) {
+        terms.push(`- ${data.notes}`);
+      }
+
+      terms.forEach((term, index) => {
+        doc.text(term, 20, currentY + 20 + index * 5);
+      });
+
+      return Buffer.from(doc.output('arraybuffer'));
+    } catch (error) {
+      console.error('Error generating quotation PDF:', error);
+      throw error;
+    }
   }
 
   /**
    * Generate invoice PDF
    */
   public static async generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
-    const html = await this.generateInvoiceHTML(data);
-    return this.generatePDFFromHTML(html);
+    const doc = new jsPDF();
+    const dollarRate = data.dollarRate || DEFAULT_DOLLAR_RATE;
+
+    try {
+      // Header
+      let currentY = await this.addHeader(doc, 'INVOICE');
+
+      // Invoice details
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+
+      const detailsStartX = 150;
+      doc.text(`Invoice#: ${data.invoiceNumber}`, detailsStartX, currentY - 15);
+      doc.text(`MOF#: ${data.mofNumber}`, detailsStartX, currentY - 10);
+      doc.text(
+        `Date: ${this.formatDate(data.invoiceDate)}`,
+        detailsStartX,
+        currentY - 5
+      );
+
+      currentY += 10;
+
+      // Client info box
+      doc.setFillColor(248, 249, 250);
+      doc.rect(20, currentY, 170, 25, 'F');
+      doc.setDrawColor(6, 57, 112);
+      doc.setLineWidth(2);
+      doc.line(20, currentY, 20, currentY + 25);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(6, 57, 112);
+      doc.text('To:', 25, currentY + 8);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${data.scope.company.name}`, 35, currentY + 8);
+      doc.text(
+        `Phone: ${data.scope.company.phone || 'N/A'}`,
+        25,
+        currentY + 13
+      );
+      doc.text(
+        `Location: ${data.scope.company.address || 'N/A'}`,
+        25,
+        currentY + 18
+      );
+      doc.text(
+        `MOF#: ${data.scope.company.mofNumber || 'N/A'}`,
+        25,
+        currentY + 23
+      );
+
+      currentY += 35;
+
+      // Service table
+      const serviceHeaders = [
+        'Service',
+        'Sales Person',
+        'Shipped Via',
+        'Due Date',
+        'Payment Type',
+      ];
+      const serviceRows = [
+        [
+          data.quotation?.serviceType || 'N/A',
+          'MCS Sales',
+          'MCS Endoscopy',
+          this.formatDate(data.dueDate),
+          'Pre-paid',
+        ],
+      ];
+
+      currentY = this.addTable(doc, currentY, serviceHeaders, serviceRows);
+
+      // Price table
+      const priceHeaders = [
+        'Manufacturer',
+        'Scope Name',
+        'Model #',
+        'Serial #',
+        'Unit Price',
+        'Total Price',
+      ];
+      const priceRows = [
+        [
+          data.scope.manufacturer?.title || 'N/A',
+          data.scope.name,
+          data.scope.modelNumber,
+          data.scope.serialNumber,
+          `$${data.unitPrice.toFixed(2)}`,
+          `$${data.totalPrice.toFixed(2)}`,
+        ],
+        ['', '', '', '', 'Subtotal', `$${data.totalPrice.toFixed(2)}`],
+        [
+          '',
+          '',
+          '',
+          '',
+          'TVA (11%)',
+          `$${data.tax.toFixed(2)}${data.showTVAInLBP ? ` / ${(data.tax * dollarRate).toLocaleString()} LBP` : ''}`,
+        ],
+        ['', '', '', '', 'Total Due', `$${data.totalDue.toFixed(2)}`],
+      ];
+
+      currentY = this.addTable(doc, currentY, priceHeaders, priceRows);
+
+      // Terms and conditions
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(37, 139, 209);
+      doc.text('Payment Terms and Conditions', 20, currentY + 10);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const terms = [
+        '- Cash on Delivery',
+        `- TVA Syrafa Rate: $1 = ${dollarRate.toLocaleString()} LBP`,
+        `- Total Amount Due: ${this.numberToWords(data.totalDue)}`,
+      ];
+
+      terms.forEach((term, index) => {
+        doc.text(term, 20, currentY + 20 + index * 5);
+      });
+
+      return Buffer.from(doc.output('arraybuffer'));
+    } catch (error) {
+      console.error('Error generating invoice PDF:', error);
+      throw error;
+    }
   }
 }

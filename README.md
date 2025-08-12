@@ -33,7 +33,7 @@ Key features include:
 - MongoDB - Database
 - Drizzle ORM - Database operations
 - Zod - Schema validation
-- Puppeteer - PDF generation
+- jsPDF/html2canvas - PDF generation
 - AWS S3 - File storage
 
 ## Collections Overview
@@ -124,7 +124,7 @@ A comprehensive medical equipment management system built with Next.js, Payload 
 - **CMS**: Payload CMS
 - **Database**: PostgreSQL (Neon DB)
 - **Authentication**: Payload Auth
-- **PDF Generation**: Puppeteer
+- **PDF Generation**: jsPDF + html2canvas
 - **File Storage**: AWS S3
 - **Styling**: Tailwind CSS + Shadcn UI
 - **Language**: TypeScript
@@ -341,7 +341,7 @@ pnpm format       # Format code with Prettier
 
 1. **Database Connection**: Verify DATABASE_URL is correct
 2. **S3 Upload Failures**: Check AWS credentials and permissions
-3. **PDF Generation**: Ensure Puppeteer dependencies are installed
+3. **PDF Generation**: Ensure jsPDF and html2canvas dependencies are installed
 4. **Build Errors**: Clear .next folder and reinstall dependencies
 
 ### Logs

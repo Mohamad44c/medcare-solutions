@@ -126,7 +126,7 @@ export async function POST(
       notes: quotation.notes || '',
     };
 
-    // Generate PDF
+    // Generate PDF using our updated PDFGenerator
     const pdfBuffer = await PDFGenerator.generateQuotationPDF(pdfData);
 
     // Upload PDF to S3

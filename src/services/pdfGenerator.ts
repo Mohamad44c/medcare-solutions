@@ -658,9 +658,27 @@ export class PDFGenerator {
    * Generate PDF from HTML using Puppeteer
    */
   private static async generatePDFFromHTML(html: string): Promise<Buffer> {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security',
+      ],
+      ...(isProduction
+        ? {
+            // Vercel specific settings
+            cacheDirectory: '/tmp/puppeteer',
+            downloadPath: '/tmp',
+          }
+        : {
+            // Development settings
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+          }),
     });
 
     try {

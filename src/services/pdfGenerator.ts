@@ -672,7 +672,6 @@ export class PDFGenerator {
           executablePath: await chromium.executablePath,
           headless: chromium.headless,
         });
-
       } else {
         // Local development environment
         browser = await puppeteer.launch({

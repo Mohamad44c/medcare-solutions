@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 import path from 'path';
 
 // Types
@@ -660,28 +661,33 @@ export class PDFGenerator {
   private static async generatePDFFromHTML(html: string): Promise<Buffer> {
     const isProduction = process.env.NODE_ENV === 'production';
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-web-security',
-      ],
-      ...(isProduction
-        ? {
-            // Vercel specific settings
-            cacheDirectory: '/tmp/puppeteer',
-            downloadPath: '/tmp',
-          }
-        : {
-            // Development settings
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-          }),
-    });
+    let browser;
 
     try {
+      if (isProduction) {
+        // Vercel production environment
+        browser = await puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+
+      } else {
+        // Local development environment
+        browser = await puppeteer.launch({
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-web-security',
+          ],
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        });
+      }
+
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
@@ -697,8 +703,13 @@ export class PDFGenerator {
       });
 
       return Buffer.from(pdf);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
     } finally {
-      await browser.close();
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 

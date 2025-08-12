@@ -14,10 +14,14 @@ module.exports = {
           downloadPath: '/tmp',
         }
       : {
-          // Skip download in development (use installed Chrome)
-          skipDownload: true,
-          // Use system Chrome in development
+          // Allow downloading Chrome in development if needed
+          skipDownload: false,
+          // Use system Chrome in development if available
           executablePath:
-            process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+            process.platform === 'darwin'
+              ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+              : process.platform === 'win32'
+                ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+                : '/usr/bin/google-chrome',
         },
 };

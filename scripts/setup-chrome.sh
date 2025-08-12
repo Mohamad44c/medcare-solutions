@@ -1,41 +1,45 @@
 #!/bin/bash
 
-# Detect OS
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    echo "Installing Chrome for macOS..."
-    if ! command -v brew &> /dev/null; then
-        echo "Homebrew not found. Please install Homebrew first."
-        exit 1
-    fi
-    brew install --cask google-chrome
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux
-    echo "Installing Chrome for Linux..."
-    if command -v apt-get &> /dev/null; then
-        # Debian/Ubuntu
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-    elif command -v dnf &> /dev/null; then
-        # Fedora
-        sudo dnf install -y google-chrome-stable
-    else
-        echo "Unsupported Linux distribution"
-        exit 1
-    fi
-else
-    echo "Unsupported operating system"
-    exit 1
-fi
+# Exit on error
+set -e
+
+echo "Setting up Chrome for Puppeteer..."
 
 # Install Puppeteer dependencies
-echo "Installing Puppeteer..."
-pnpm install
+echo "Installing Puppeteer and its dependencies..."
+npm install puppeteer@10.1.0 puppeteer-core@10.1.0 chrome-aws-lambda@10.1.0
 
-# Set environment variable
-echo "export PUPPETEER_EXECUTABLE_PATH=$(which google-chrome)" >> ~/.zshrc
-echo "export PUPPETEER_EXECUTABLE_PATH=$(which google-chrome)" >> ~/.bashrc
+# Create the .puppeteerrc.cjs file if it doesn't exist
+if [ ! -f ".puppeteerrc.cjs" ]; then
+  echo "Creating .puppeteerrc.cjs configuration file..."
+  cat > .puppeteerrc.cjs << 'EOL'
+/**
+ * @type {import("puppeteer").Configuration}
+ */
+module.exports = {
+  // Changes for Vercel deployment
+  cacheDirectory: '/tmp/puppeteer',
+  // Use installed Chrome in development, download in production
+  chrome:
+    process.env.NODE_ENV === 'production'
+      ? {
+          // Download Chrome in production (Vercel)
+          skipDownload: false,
+          // Specify a custom download path for Vercel
+          downloadPath: '/tmp',
+        }
+      : {
+          // Skip download in development (use installed Chrome)
+          skipDownload: false,
+          // Use downloaded Chrome in development
+          executablePath: process.platform === 'darwin' 
+            ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+            : process.platform === 'win32'
+            ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+            : '/usr/bin/google-chrome',
+        },
+};
+EOL
+fi
 
-echo "Setup complete! Please restart your terminal or run:"
-echo "source ~/.zshrc # if using zsh"
-echo "source ~/.bashrc # if using bash"
+echo "Chrome setup complete!"

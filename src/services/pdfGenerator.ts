@@ -692,7 +692,7 @@ export class PDFGenerator {
       await page.setContent(html, { waitUntil: 'networkidle0' });
 
       const pdf = await page.pdf({
-        format: 'A4',
+        format: 'a4',
         margin: {
           top: '15mm',
           right: '15mm',

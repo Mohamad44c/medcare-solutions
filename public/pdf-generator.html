@@ -51,11 +51,73 @@
         padding: 40px;
       }
 
+      /* Enhanced Tabs Styling - shadcn UI inspired */
+      .tabs-container {
+        width: 100%;
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+
+      .tabs-list {
+        display: inline-flex;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background-color: #f1f5f9;
+        padding: 4px;
+        color: #64748b;
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .tab-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 150ms ease;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+      }
+
+      .tab-trigger:hover {
+        color: #0f172a;
+      }
+
+      .tab-trigger.active {
+        color: #0f172a;
+        background-color: white;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+
+      .tab-trigger:focus-visible {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+
+      .tab-icon {
+        margin-right: 6px;
+        font-size: 16px;
+      }
+
       .form-group {
         margin-bottom: 25px;
       }
 
-      label {
+      .form-group label {
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
@@ -84,12 +146,13 @@
 
       .button-group {
         display: flex;
+        justify-content: center;align-items: center;
         gap: 15px;
         flex-wrap: wrap;
         margin-bottom: 30px;
       }
 
-      button {
+      .action-button {
         background: linear-gradient(135deg, #258bd1 0%, #1a5f7a 100%);
         color: white;
         padding: 12px 24px;
@@ -106,16 +169,16 @@
         justify-content: center;
       }
 
-      button:hover {
+      .action-button:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(37, 139, 209, 0.3);
       }
 
-      button:active {
+      .action-button:active {
         transform: translateY(0);
       }
 
-      button:disabled {
+      .action-button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
@@ -218,6 +281,12 @@
         border-radius: 8px;
         text-align: center;
         border: 1px solid #e1e5e9;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
 
       .stat-number {
@@ -230,6 +299,25 @@
       .stat-label {
         color: #666;
         font-size: 0.9rem;
+      }
+
+      /* Enhanced form styling */
+      .document-id-group {
+        position: relative;
+      }
+
+      .document-id-group input {
+        padding-left: 48px;
+      }
+
+      .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 18px;
+        z-index: 1;
       }
 
       @media (max-width: 768px) {
@@ -254,8 +342,17 @@
           flex-direction: column;
         }
 
-        button {
+        .action-button {
           min-width: auto;
+        }
+
+        .tabs-list {
+          max-width: 100%;
+        }
+
+        .tab-trigger {
+          font-size: 13px;
+          padding: 8px 12px;
         }
       }
     </style>
@@ -283,33 +380,50 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="documentType">Document Type:</label>
-          <select id="documentType" onchange="onDocumentTypeChange()">
-            <option value="quotation">Quotation</option>
-            <option value="invoice">Invoice</option>
-          </select>
+        <!-- Enhanced Tabs replacing the select dropdown -->
+        <div class="tabs-container">
+          <div class="tabs-list">
+            <button 
+              class="tab-trigger active" 
+              id="quotation-tab"
+              onclick="switchDocumentType('quotation')"
+            >
+              <span class="tab-icon">📋</span>
+              Quotation
+            </button>
+            <button 
+              class="tab-trigger" 
+              id="invoice-tab"
+              onclick="switchDocumentType('invoice')"
+            >
+              <span class="tab-icon">🧾</span>
+              Invoice
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="documentId">Document ID:</label>
-          <input
-            type="text"
-            id="documentId"
-            placeholder="Enter document ID or select from list below"
-          />
+          <div class="document-id-group">
+            <label for="documentId">Document ID:</label>
+            <span class="input-icon">🔍</span>
+            <input
+              type="text"
+              id="documentId"
+              placeholder="Enter document ID or select from list below"
+            />
+          </div>
         </div>
 
         <div class="button-group">
-          <button onclick="fetchDocuments()" id="loadBtn">
+          <button class="action-button" onclick="fetchDocuments()" id="loadBtn">
             <span>📋</span>
             Load Documents
           </button>
-          <button onclick="generatePDF()" id="generateBtn">
+          <button class="action-button" onclick="generatePDF()" id="generateBtn">
             <span>📄</span>
             Generate PDF
           </button>
-          <button onclick="clearResults()" id="clearBtn">
+          <button class="action-button" onclick="clearResults()" id="clearBtn">
             <span>🗑️</span>
             Clear Results
           </button>
@@ -328,8 +442,22 @@
       let isLoading = false;
       let currentDocumentType = 'quotation';
 
+      // Enhanced function to switch document types via tabs
+      function switchDocumentType(type) {
+        // Update active tab styling
+        document.querySelectorAll('.tab-trigger').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        document.getElementById(type + '-tab').classList.add('active');
+        
+        // Update current document type
+        currentDocumentType = type;
+        
+        // Call the original function to maintain existing functionality
+        onDocumentTypeChange();
+      }
+
       function onDocumentTypeChange() {
-        currentDocumentType = document.getElementById('documentType').value;
         clearResults();
         fetchDocuments();
       }

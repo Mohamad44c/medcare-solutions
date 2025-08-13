@@ -311,7 +311,7 @@ export class PDFGenerator {
     });
 
     // Table border
-    doc.setDrawColor(221, 221, 221);
+    // doc.setDrawColor(221, 221, 221);
     doc.rect(margin, startY, tableWidth, currentY - startY);
 
     return currentY + 10;

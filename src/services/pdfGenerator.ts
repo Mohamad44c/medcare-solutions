@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs/promises';
 // Add the polyfill for Node.js environment
 import { JSDOM } from 'jsdom';
-import { createCanvas } from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
+import sharp from 'sharp';
 
 // Polyfill for document and window in Node.js
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
@@ -206,8 +207,24 @@ export class PDFGenerator {
    */
   private static async loadImageAsBase64(filePath: string): Promise<string> {
     try {
+      // Read the image file
       const buffer = await fs.readFile(filePath);
-      return buffer.toString('base64');
+
+      // Optimize the image using sharp
+      const optimizedBuffer = await sharp(buffer)
+        .resize(300, 300, {
+          // Resize to reasonable dimensions
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .jpeg({
+          // Convert to JPEG with compression
+          quality: 80,
+          progressive: true,
+        })
+        .toBuffer();
+
+      return optimizedBuffer.toString('base64');
     } catch (error) {
       console.warn(`Could not load image from ${filePath}:`, error);
       return '';
@@ -311,7 +328,7 @@ export class PDFGenerator {
     });
 
     // Table border
-    // doc.setDrawColor(221, 221, 221);
+    doc.setDrawColor(255, 255, 255);
     doc.rect(margin, startY, tableWidth, currentY - startY);
 
     return currentY + 10;
@@ -323,7 +340,11 @@ export class PDFGenerator {
   public static async generateQuotationPDF(
     data: QuotationData
   ): Promise<Buffer> {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      compress: true,
+      putOnlyUsedFonts: true,
+      precision: 2,
+    });
 
     try {
       // Header
@@ -357,7 +378,7 @@ export class PDFGenerator {
       // Client info box
       doc.setFillColor(248, 249, 250);
       doc.rect(20, currentY, 170, 20, 'F');
-      doc.setDrawColor(6, 57, 112);
+      doc.setDrawColor(255, 255, 255);
       doc.setLineWidth(2);
       doc.line(20, currentY, 20, currentY + 20);
 
@@ -466,7 +487,11 @@ export class PDFGenerator {
    * Generate invoice PDF
    */
   public static async generateInvoicePDF(data: InvoiceData): Promise<Buffer> {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      compress: true,
+      putOnlyUsedFonts: true,
+      precision: 2,
+    });
     const dollarRate = data.dollarRate || DEFAULT_DOLLAR_RATE;
 
     try {
@@ -492,7 +517,7 @@ export class PDFGenerator {
       // Client info box
       doc.setFillColor(248, 249, 250);
       doc.rect(20, currentY, 170, 25, 'F');
-      doc.setDrawColor(6, 57, 112);
+      doc.setDrawColor(255, 255, 255);
       doc.setLineWidth(2);
       doc.line(20, currentY, 20, currentY + 25);
 

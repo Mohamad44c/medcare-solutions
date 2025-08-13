@@ -378,7 +378,7 @@ export class PDFGenerator {
       // Client info box
       doc.setFillColor(248, 249, 250);
       doc.rect(20, currentY, 170, 20, 'F');
-      doc.setDrawColor(255, 255, 255);
+      doc.setDrawColor(6, 57, 112);
       doc.setLineWidth(2);
       doc.line(20, currentY, 20, currentY + 20);
 
@@ -517,7 +517,7 @@ export class PDFGenerator {
       // Client info box
       doc.setFillColor(248, 249, 250);
       doc.rect(20, currentY, 170, 25, 'F');
-        doc.setDrawColor(6, 57, 112);
+      doc.setDrawColor(6, 57, 112);
       doc.setLineWidth(2);
       doc.line(20, currentY, 20, currentY + 25);
 

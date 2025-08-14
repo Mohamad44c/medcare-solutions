@@ -260,9 +260,10 @@ export class PDFGenerator {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text('Beirut Lebanon', 55, 20);
-    doc.text('+961 03 788345', 55, 25);
-    doc.text('+961 70 072401 (WhatsApp)', 55, 30);
-    doc.text('info@medcare-solutions.com', 55, 35);
+    doc.text('Hazmieh, Mar Roukouz Center 4th Floor, Beirut, Lebanon', 55, 25);
+    doc.text('+961 03 788345', 55, 30);
+    doc.text('+961 70 072401 (WhatsApp)', 55, 35);
+    doc.text('info@medcare-solutions.com', 55, 40);
 
     // Title
     doc.setFontSize(24);

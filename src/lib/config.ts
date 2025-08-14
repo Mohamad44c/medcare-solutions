@@ -47,7 +47,7 @@ export const config = {
     name: 'MCS',
     phone: '+961 03 788345',
     whatsapp: '+961 70 072401',
-    email: 'info@mcs.com',
+    email: 'info@medcare-solutions.com',
     location: 'Beirut Lebanon',
   },
 };

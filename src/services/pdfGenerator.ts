@@ -262,7 +262,7 @@ export class PDFGenerator {
     doc.text('Beirut Lebanon', 55, 20);
     doc.text('+961 03 788345', 55, 25);
     doc.text('+961 70 072401 (WhatsApp)', 55, 30);
-    doc.text('info@mcs.com', 55, 35);
+    doc.text('info@medcare-solutions.com', 55, 35);
 
     // Title
     doc.setFontSize(24);

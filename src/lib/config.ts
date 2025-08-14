@@ -49,7 +49,7 @@ export const config = {
     whatsapp: '+961 70 072401',
     email: 'info@medcare-solutions.com',
     location: 'Beirut Lebanon',
-    address: 'Hazmieh, Mar Roukouz Center 4th Floor, Beirut, Lebanon',
+    address: 'Hazmieh, Mar Roukouz Center 4th Floor',
   },
 };
 

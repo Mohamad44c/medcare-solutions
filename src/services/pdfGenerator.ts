@@ -285,13 +285,35 @@ export class PDFGenerator {
     options?: {
       headerColor?: [number, number, number];
       fontSize?: number;
+      isDescriptionTable?: boolean;
     }
   ): number {
-    const { headerColor = [37, 139, 209], fontSize = 9 } = options || {};
+    const {
+      headerColor = [37, 139, 209],
+      fontSize = 9,
+      isDescriptionTable = false,
+    } = options || {};
     const pageWidth = doc.internal.pageSize.width;
     const margin = 20;
     const tableWidth = pageWidth - 2 * margin;
-    const colWidth = tableWidth / headers.length;
+
+    // If this is a table with description (like the price table), make the first column wider
+    let colWidths: number[];
+    if (
+      isDescriptionTable &&
+      headers.length === 3 &&
+      headers[0] === 'Description'
+    ) {
+      // For price table: Description column gets 60% of the width, others split the rest
+      colWidths = [
+        tableWidth * 0.6, // Description column
+        tableWidth * 0.2, // Unit Price
+        tableWidth * 0.2, // Total Price
+      ];
+    } else {
+      // Default: equal width for all columns
+      colWidths = headers.map(() => tableWidth / headers.length);
+    }
 
     let currentY = startY;
 
@@ -302,8 +324,12 @@ export class PDFGenerator {
     doc.setFontSize(fontSize);
 
     doc.rect(margin, currentY, tableWidth, 8, 'F');
+
+    // Calculate x position for each column
+    let xPos = margin;
     headers.forEach((header, i) => {
-      doc.text(header, margin + i * colWidth + 2, currentY + 6);
+      doc.text(header, xPos + 2, currentY + 6);
+      xPos += colWidths[i];
     });
 
     currentY += 8;
@@ -313,18 +339,38 @@ export class PDFGenerator {
     doc.setFont('helvetica', 'normal');
 
     rows.forEach((row, rowIndex) => {
-      if (rowIndex % 2 === 0) {
-        doc.setFillColor(248, 249, 250);
-        doc.rect(margin, currentY, tableWidth, 8, 'F');
-      }
+      // Calculate row height based on content
+      let rowHeight = 8; // Minimum row height
 
+      // First pass: determine the required height for this row
       row.forEach((cell, i) => {
-        // Handle long text by wrapping
-        const cellText = cell;
-        doc.text(cellText, margin + i * colWidth + 2, currentY + 6);
+        // For description column or any long text
+        if (cell.length > 25) {
+          const textLines = doc.splitTextToSize(cell, colWidths[i] - 4); // -4 for padding
+          const cellHeight = textLines.length * 5; // 5 points per line
+          rowHeight = Math.max(rowHeight, cellHeight);
+        }
       });
 
-      currentY += 8;
+      // Draw the background for the row with the calculated height
+      if (rowIndex % 2 === 0) {
+        doc.setFillColor(248, 249, 250);
+        doc.rect(margin, currentY, tableWidth, rowHeight, 'F');
+      }
+
+      // Second pass: render the text
+      let xPos = margin;
+      row.forEach((cell, i) => {
+        if (cell.length > 25) {
+          const textLines = doc.splitTextToSize(cell, colWidths[i] - 4);
+          doc.text(textLines, xPos + 2, currentY + 6);
+        } else {
+          doc.text(cell, xPos + 2, currentY + 6);
+        }
+        xPos += colWidths[i];
+      });
+
+      currentY += rowHeight;
     });
 
     // Table border
@@ -448,7 +494,9 @@ export class PDFGenerator {
         `$${(data.price - data.discount).toFixed(2)}`,
       ]);
 
-      currentY = this.addTable(doc, currentY, priceHeaders, priceRows);
+      currentY = this.addTable(doc, currentY, priceHeaders, priceRows, {
+        isDescriptionTable: true,
+      });
 
       // Terms and conditions
       doc.setFont('helvetica', 'bold');
@@ -596,7 +644,9 @@ export class PDFGenerator {
         ['', '', '', '', 'Total Due', `$${data.totalDue.toFixed(2)}`],
       ];
 
-      currentY = this.addTable(doc, currentY, priceHeaders, priceRows);
+      currentY = this.addTable(doc, currentY, priceHeaders, priceRows, {
+        isDescriptionTable: true,
+      });
 
       // Terms and conditions
       doc.setFont('helvetica', 'bold');

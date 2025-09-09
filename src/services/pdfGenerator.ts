@@ -320,8 +320,7 @@ export class PDFGenerator {
 
       row.forEach((cell, i) => {
         // Handle long text by wrapping
-        const cellText =
-          cell.length > 25 ? cell.substring(0, 22) + '...' : cell;
+        const cellText = cell;
         doc.text(cellText, margin + i * colWidth + 2, currentY + 6);
       });
 

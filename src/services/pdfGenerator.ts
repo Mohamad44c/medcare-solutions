@@ -429,7 +429,7 @@ export class PDFGenerator {
       const priceHeaders = ['Description', 'Unit Price', 'Total Price'];
       const priceRows = [
         [
-          `${data.serviceType} - ${data.problems.substring(0, 50)}${data.problems.length > 50 ? '...' : ''}`,
+          `${data.serviceType} - ${data.problems}`,
           `$${data.price.toFixed(2)}`,
           `$${data.price.toFixed(2)}`,
         ],

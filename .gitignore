@@ -131,3 +131,6 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# pnpm store
+.pnpm-store/*

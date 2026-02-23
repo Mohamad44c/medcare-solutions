@@ -54,7 +54,6 @@ export const Scopes: CollectionConfig = {
           name: 'name',
           type: 'text',
           required: true,
-          unique: true,
         },
         {
           name: 'company',

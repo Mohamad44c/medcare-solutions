@@ -160,7 +160,7 @@ export const Scopes: CollectionConfig = {
             description:
               'Click the button below to create a new evaluation for this scope',
             components: {
-              Field: 'CreateEvaluationField#default',
+              Field: '/components/CreateEvaluationField#default',
             },
           },
         },

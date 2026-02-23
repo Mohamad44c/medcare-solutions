@@ -131,7 +131,7 @@ export const Evaluation: CollectionConfig = {
         description:
           'Click the button below to create a new quotation for this evaluation',
         components: {
-          Field: 'CreateQuotationField#default',
+          Field: '/components/CreateQuotationField#default',
         },
       },
     },

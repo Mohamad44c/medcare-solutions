@@ -215,7 +215,7 @@ export const Quotation: CollectionConfig = {
         description:
           'Click the button below to create a new invoice for this quotation',
         components: {
-          Field: 'CreateInvoiceField#default',
+          Field: '/components/CreateInvoiceField#default',
         },
       },
     },
